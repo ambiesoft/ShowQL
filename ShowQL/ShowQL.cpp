@@ -8,6 +8,8 @@
 #include "../../lsMisc/GetFilesInfo.h"
 #include "../../lsMisc/OpenCommon.h"
 #include "../../lsMisc/DebugMacro.h"
+#include "../../lsMisc/CommandLineParser.h"
+#include "../../lsMisc/GetVersionString.h"
 #include "../../lsMisc/stdosd/stdosd.h"
 
 #pragma comment(lib, "Shell32.lib")
@@ -134,6 +136,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_ LPWSTR    lpCmdLine,
 	_In_ int       nCmdShow)
 {
+	CCommandLineParser parser;
+
+	bool bVersion = false;
+	parser.AddOption(L"-v", 0, &bVersion);
+
+	parser.Parse();
+
+	if (bVersion)
+	{
+		MessageBox(nullptr,
+			stdFormat(L"%s v%s", 
+				APPNAME, GetVersionString(nullptr, 3).c_str()).c_str(),
+			APPNAME,
+			MB_ICONINFORMATION);
+		return 0;
+	}
 	HWND hWnd = CreateSimpleWindow(WndProc);
 	if (!SHGetSpecialFolderPath(hWnd, szT, CSIDL_APPDATA, FALSE))
 	{
