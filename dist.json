@@ -1,0 +1,41 @@
+{
+	"name": "ShowQL",
+	"solution": "ShowQL.sln",
+	"targetproject": "zzzDist",
+	"configuration": "Release",
+    "targets": [
+            {
+            	"setoutdirforbuild": false,
+        	    "outdir" : "Release\\v142\\ShowQL\\x86\\",
+                "platform":"Win32"
+            },
+            {
+            	"setoutdirforbuild": false,
+        	    "outdir" : "Release\\v142\\ShowQL\\x64\\",
+                "platform":"x64"
+            }
+    ],
+    "archivingdir": "Release\\v142\\ShowQL\\",
+    "archivedir": "C:/Linkout/",
+    "remotedir": "https://ambiesoft.com/ffdav/uploads/ShowQL/",
+    "remotesha1" : "https://ambiesoft.com/ffdav/uploads/getSha1.php?file=ShowQL/{}",
+    
+    "TotalFileCount": "exact",
+    
+    "ShouldNotBeFiles": [
+		"ShowQL.ini"
+    ],
+    
+    "ShouldBeFiles": [
+		"ShowQL.exe",
+		"ShowQL.pdb",
+		"History.txt",
+		"LICENSE",
+		"README.md"
+    ],
+    
+    "ShouldBeOneOfThem": [],
+    
+    "obtainverfrom": "history.txt",
+    "obtainverregex": "\\d+\\.\\d+\\.\\d+"
+}

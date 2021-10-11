@@ -28,9 +28,9 @@ TCHAR szT[MAX_PATH];
 #define MENUID_START 2
 WORD gMenuIndex;
 map<UINT, wstring> gCmdMap;
-// wstring glastSelectedPopup;
 map<HMENU, wstring> gPopupMap;
 wstring qlRoot;
+
 void ErrorExit(const wchar_t* pMessage, int ret = -1)
 {
 	MessageBox(nullptr,
@@ -110,13 +110,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					if (!(fi[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 					{
 						UINT cmd = gMenuIndex++ + MENUID_START;
-						AppendMenu(hMenu, MF_BYCOMMAND, cmd, fi[i].cFileName);
-						//MENUITEMINFO mii = { 0 };
-						//mii.cbSize = sizeof(mii);
-						//mii.fMask = MIIM_DATA;
-						//mii.dwItemData = 
-
-						//SetMenuItemInfo(hMenu, cmd, FALSE,)
+						AppendMenu(hMenu, MF_BYCOMMAND, cmd,
+							stdGetFileNameWitoutExtension(fi[i].cFileName).c_str());
+					
 						gCmdMap[cmd] = stdCombinePath(qlDir, fi[i].cFileName);
 					}
 				}
@@ -143,7 +139,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	parser.Parse();
 
-	if (bVersion)
+	if (bVersion || GetAsyncKeyState(VK_CONTROL) < 0)
 	{
 		MessageBox(nullptr,
 			stdFormat(L"%s v%s", 
