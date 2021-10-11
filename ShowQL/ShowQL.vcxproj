@@ -72,15 +72,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(PlatformToolset)\$(ProjectName)\$(PlatformTarget)\</OutDir>
+    <IntDir>$(Configuration)\$(PlatformToolset)\$(ProjectName)-int\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(PlatformToolset)\$(ProjectName)\$(PlatformTarget)\</OutDir>
+    <IntDir>$(Configuration)\$(PlatformToolset)\$(ProjectName)-int\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(PlatformToolset)\$(ProjectName)\$(PlatformTarget)\</OutDir>
+    <IntDir>$(Configuration)\$(PlatformToolset)\$(ProjectName)-int\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(PlatformToolset)\$(ProjectName)\$(PlatformTarget)\</OutDir>
+    <IntDir>$(Configuration)\$(PlatformToolset)\$(ProjectName)-int\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -140,18 +148,26 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\lsMisc\CreateSimpleWindow.cpp" />
+    <ClCompile Include="..\..\lsMisc\DebugMacro.cpp" />
     <ClCompile Include="..\..\lsMisc\GetFilesInfo.cpp" />
     <ClCompile Include="..\..\lsMisc\GetLastErrorString.cpp" />
+    <ClCompile Include="..\..\lsMisc\OpenCommon.cpp" />
     <ClCompile Include="..\..\lsMisc\stdosd\stdosd.cpp" />
     <ClCompile Include="..\..\lsMisc\stdosd\stdosd_win.cpp" />
     <ClCompile Include="ShowQL.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\lsMisc\CreateSimpleWindow.h" />
+    <ClInclude Include="..\..\lsMisc\DebugMacro.h" />
     <ClInclude Include="..\..\lsMisc\GetFilesInfo.h" />
     <ClInclude Include="..\..\lsMisc\GetLastErrorString.h" />
+    <ClInclude Include="..\..\lsMisc\OpenCommon.h" />
     <ClInclude Include="..\..\lsMisc\stdosd\stdosd.h" />
     <ClInclude Include="..\..\lsMisc\stdosd\stdosd_literal.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ShowQL.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
