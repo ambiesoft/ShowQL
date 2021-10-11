@@ -10,6 +10,7 @@
 #include "../../lsMisc/DebugMacro.h"
 #include "../../lsMisc/CommandLineParser.h"
 #include "../../lsMisc/GetVersionString.h"
+#include "../../lsMisc/HighDPI.h"
 #include "../../lsMisc/stdosd/stdosd.h"
 
 #pragma comment(lib, "Shell32.lib")
@@ -199,6 +200,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_ LPWSTR    lpCmdLine,
 	_In_ int       nCmdShow)
 {
+	InitHighDPISupport();
 	CCommandLineParser parser;
 
 	bool bVersion = false;
