@@ -7,7 +7,7 @@
             {
             	"setoutdirforbuild": false,
         	    "outdir" : "Release\\v142\\ShowQL\\x86\\",
-                "platform":"Win32"
+                "platform":"x86"
             },
             {
             	"setoutdirforbuild": false,
