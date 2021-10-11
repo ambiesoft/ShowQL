@@ -29,7 +29,7 @@
     "ShouldBeFiles": [
 		"ShowQL.exe",
 		"ShowQL.pdb",
-		"History.txt",
+		"history.txt",
 		"LICENSE",
 		"README.md"
     ],

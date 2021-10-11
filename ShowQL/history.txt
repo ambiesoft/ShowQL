@@ -1,3 +1,6 @@
+2021/10/11 v1.0.2
+Add opaque icons
+
 2021/10/11 v1.0.1
 Temporarily created
 

@@ -62,6 +62,51 @@ void ErrorExit(DWORD le)
 //		}
 //	}
 //}
+
+
+//HBITMAP IconToAlphaBitmap(HICON ico)
+//{
+//	ICONINFO ii;
+//	GetIconInfo(ico, &ii);
+//	HBITMAP bmp = (ii.hbmColor);
+//	DeleteObject(ii.hbmColor);
+//	DeleteObject(ii.hbmMask);
+//
+//	if (Bitmap.GetPixelFormatSize(bmp.PixelFormat) < 32)
+//		return ico.ToBitmap();
+//
+//	BitmapData bmData;
+//	Rectangle bmBounds = new Rectangle(0, 0, bmp.Width, bmp.Height);
+//
+//	bmData = bmp.LockBits(bmBounds, ImageLockMode.ReadOnly, bmp.PixelFormat);
+//
+//	Bitmap dstBitmap = new Bitmap(bmData.Width, bmData.Height, bmData.Stride, PixelFormat.Format32bppArgb, bmData.Scan0);
+//
+//	bool IsAlphaBitmap = false;
+//
+//	for (int y = 0; y <= bmData.Height - 1; y++)
+//	{
+//		for (int x = 0; x <= bmData.Width - 1; x++)
+//		{
+//			Color PixelColor = Color.FromArgb(Marshal.ReadInt32(bmData.Scan0, (bmData.Stride * y) + (4 * x)));
+//			if (PixelColor.A > 0 & PixelColor.A < 255)
+//			{
+//				IsAlphaBitmap = true;
+//				break;
+//			}
+//		}
+//		if (IsAlphaBitmap) break;
+//	}
+//
+//	bmp.UnlockBits(bmData);
+//
+//	if (IsAlphaBitmap == true)
+//		return new Bitmap(dstBitmap);
+//	else
+//		return new Bitmap(ico.ToBitmap());
+//
+//}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -113,7 +158,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						AppendMenu(hMenu, MF_BYCOMMAND, cmd,
 							stdGetFileNameWitoutExtension(fi[i].cFileName).c_str());
 					
-						gCmdMap[cmd] = stdCombinePath(qlDir, fi[i].cFileName);
+						const wstring full = stdCombinePath(qlDir, fi[i].cFileName);
+						SHFILEINFO sfi = { 0 };
+						if (!SHGetFileInfo(full.c_str(),
+							FILE_ATTRIBUTE_NORMAL,
+							&sfi,
+							sizeof(sfi),
+							SHGFI_ICON | SHGFI_SMALLICON))
+						{
+							ErrorExit(GetLastError());
+						}
+						
+						ICONINFO iconInfo;
+						if (!GetIconInfo(sfi.hIcon, &iconInfo))
+							ErrorExit(GetLastError());
+						HBITMAP hBitmap = iconInfo.hbmColor;
+						//HBITMAP hBitmap = ggg(sfi.hIcon);
+						MENUITEMINFO mii;
+						mii.cbSize = sizeof(mii);
+						mii.fMask = MIIM_BITMAP;
+						mii.hbmpItem = hBitmap;
+						if (!SetMenuItemInfo(hMenu, cmd, FALSE, &mii))
+							ErrorExit(GetLastError());
+						gCmdMap[cmd] = full;
 					}
 				}
 			}
