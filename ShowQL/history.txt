@@ -1,3 +1,6 @@
+2021/10/11 v1.0.3
+x64 needs CoInitialize
+
 2021/10/11 v1.0.2
 Add opaque icons
 

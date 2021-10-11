@@ -161,7 +161,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						const wstring full = stdCombinePath(qlDir, fi[i].cFileName);
 						SHFILEINFO sfi = { 0 };
 						if (!SHGetFileInfo(full.c_str(),
-							FILE_ATTRIBUTE_NORMAL,
+							0,
 							&sfi,
 							sizeof(sfi),
 							SHGFI_ICON | SHGFI_SMALLICON))
@@ -215,6 +215,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			MB_ICONINFORMATION);
 		return 0;
 	}
+	CoInitialize(nullptr);
 	HWND hWnd = CreateSimpleWindow(WndProc);
 	if (!SHGetSpecialFolderPath(hWnd, szT, CSIDL_APPDATA, FALSE))
 	{
