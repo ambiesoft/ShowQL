@@ -1,3 +1,6 @@
+2021/10/13 v1.0.4
+Take main argument as folder to show in menu
+
 2021/10/11 v1.0.3
 x64 needs CoInitialize
 

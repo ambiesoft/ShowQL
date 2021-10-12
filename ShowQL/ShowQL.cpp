@@ -201,13 +201,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_ int       nCmdShow)
 {
 	InitHighDPISupport();
-	CCommandLineParser parser;
+	CCommandLineParser parser(I18N(L"Show QuickLaunch Menus"), APPNAME);
 
 	bool bVersion = false;
-	parser.AddOption(L"-v", 0, &bVersion);
+	parser.AddOptionRange({ L"-v",L"-version",L"--version" }, 0, &bVersion, ArgEncodingFlags::ArgEncodingFlags_Default,
+		I18N(L"Show version"));
+
+	bool bHelp = false;
+	parser.AddOptionRange({ L"-h",L"/?",L"-help",L"--help" }, 0, &bHelp, ArgEncodingFlags::ArgEncodingFlags_Default,
+		I18N(L"Show Help"));
+
+	COption mainArgs(L"",ArgCount::ArgCount_One, ArgEncodingFlags::ArgEncodingFlags_Default,
+		L"Directory to show in menu");
+	parser.AddOption(&mainArgs);
 
 	parser.Parse();
 
+	if (parser.hadUnknownOption())
+	{
+		ErrorExit(stdFormat(I18N(L"Unknown option:%s"), 
+			parser.getUnknowOptionStrings().c_str()));
+	}
 	if (bVersion || GetAsyncKeyState(VK_CONTROL) < 0)
 	{
 		MessageBox(nullptr,
@@ -217,17 +231,44 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			MB_ICONINFORMATION);
 		return 0;
 	}
+	if (bHelp)
+	{
+		MessageBox(nullptr,
+			parser.getHelpMessage().c_str(),
+			stdFormat(L"%s v%s",
+				APPNAME, GetVersionString(nullptr, 3).c_str()).c_str(),
+			MB_ICONINFORMATION);
+		return 0;
+	}
+	wstring targetFolder;
+	if (mainArgs.getValueCount() > 1)
+	{
+		ErrorExit(I18N(L"Only one main argument is acceptable"));
+	}
+	if (mainArgs.getValueCount() > 0)
+	{
+		targetFolder = mainArgs.getFirstValue();
+	}
 	CoInitialize(nullptr);
 	HWND hWnd = CreateSimpleWindow(WndProc);
-	if (!SHGetSpecialFolderPath(hWnd, szT, CSIDL_APPDATA, FALSE))
+
+	if (!targetFolder.empty())
 	{
-		ErrorExit(GetLastError());
+		qlRoot = targetFolder;
 	}
-	qlRoot = stdCombinePath(szT, L"Microsoft\\Internet Explorer\\Quick Launch");
+	else
+	{
+		if (!SHGetSpecialFolderPath(hWnd, szT, CSIDL_APPDATA, FALSE))
+		{
+			ErrorExit(GetLastError());
+		}
+		qlRoot = stdCombinePath(szT, L"Microsoft\\Internet Explorer\\Quick Launch");
+	}
 	if ((GetFileAttributes(qlRoot.c_str()) & FILE_ATTRIBUTE_DIRECTORY) == 0)
 	{
 		ErrorExit(stdFormat(I18N(L"'%s' is not a directory."), qlRoot.c_str()));
 	}
+
 	ghPopup = CreatePopupMenu();
 	gPopupMap[ghPopup] = wstring();
 	InsertMenu(ghPopup, 0, MF_BYCOMMAND, MENUID_DUMMY, L"<DUMMY>");
