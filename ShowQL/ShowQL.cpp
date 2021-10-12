@@ -13,6 +13,8 @@
 #include "../../lsMisc/HighDPI.h"
 #include "../../lsMisc/stdosd/stdosd.h"
 
+#include "gitrev.h"
+
 #pragma comment(lib, "Shell32.lib")
 
 using namespace Ambiesoft;
@@ -224,9 +226,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 	if (bVersion || GetAsyncKeyState(VK_CONTROL) < 0)
 	{
+		wstring message = stdFormat(L"%s v%s",
+			APPNAME, GetVersionString(nullptr, 3).c_str()).c_str();
+		message += L"\r\n\r\n";
+		message += L"Gitrev:\r\n";
+		message += stdStringReplace(GITREV::GetHashMessage(),
+			L"\n", L"\r\n");
 		MessageBox(nullptr,
-			stdFormat(L"%s v%s", 
-				APPNAME, GetVersionString(nullptr, 3).c_str()).c_str(),
+			message.c_str(),
 			APPNAME,
 			MB_ICONINFORMATION);
 		return 0;
