@@ -25,6 +25,7 @@ using namespace std;
 #define APPNAME L"ShowQL"
 #define I18N(s) s
 #define WAIT_AFTER_LAUNCH (5 * 1000)
+#define WAIT_FOR_PROCESSIDLE (30 * 1000)
 
 HMENU ghPopup;
 TCHAR szT[MAX_PATH];
@@ -304,8 +305,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (gCmdMap.find(cmd) != gCmdMap.end())
 	{
 		wstring shortcut = gCmdMap[cmd];
-		OpenCommon(wnd, shortcut.c_str());
-		Sleep(WAIT_AFTER_LAUNCH);
+		CKernelHandle processHandle;
+		if (OpenCommon(wnd, shortcut.c_str(), NULL, NULL, &processHandle))
+		{
+			WaitForInputIdle(processHandle, WAIT_FOR_PROCESSIDLE);
+		}
 	}
 	return 0;
 }

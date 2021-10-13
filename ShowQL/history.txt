@@ -1,3 +1,6 @@
+2021/10/13 v1.0.6
+WaitForInputIdle after target app Lanuched
+
 2021/10/13 v1.0.5
 Open in Explorer with commandline '-e' or SHIFT pressed
 
