@@ -11,6 +11,7 @@
 #include "../../lsMisc/CommandLineParser.h"
 #include "../../lsMisc/GetVersionString.h"
 #include "../../lsMisc/HighDPI.h"
+#include "../../lsMisc/CHandle.h"
 #include "../../lsMisc/stdosd/stdosd.h"
 
 #include "gitrev.h"
@@ -23,6 +24,7 @@ using namespace std;
 
 #define APPNAME L"ShowQL"
 #define I18N(s) s
+#define WAIT_AFTER_LAUNCH (5 * 1000)
 
 HMENU ghPopup;
 TCHAR szT[MAX_PATH];
@@ -261,7 +263,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		targetFolder = mainArgs.getFirstValue();
 	}
 	CoInitialize(nullptr);
-	HWND hWnd = CreateSimpleWindow(WndProc);
+	CHWnd wnd(CreateSimpleWindow(WndProc));
 
 	if (!targetFolder.empty())
 	{
@@ -269,7 +271,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 	else
 	{
-		if (!SHGetSpecialFolderPath(hWnd, szT, CSIDL_APPDATA, FALSE))
+		if (!SHGetSpecialFolderPath(wnd, szT, CSIDL_APPDATA, FALSE))
 		{
 			ErrorExit(GetLastError());
 		}
@@ -283,7 +285,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (bExplorer || GetAsyncKeyState(VK_SHIFT) < 0)
 	{
 		qlRoot = stdAddPathSeparator(qlRoot);
-		OpenCommon(hWnd, qlRoot.c_str());
+		OpenCommon(wnd, qlRoot.c_str());
 		return 0;
 	}
 	ghPopup = CreatePopupMenu();
@@ -292,17 +294,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	POINT curPos;
 	GetCursorPos(&curPos);
-	SetForegroundWindow(hWnd);
+	SetForegroundWindow(wnd);
 	UINT cmd = TrackPopupMenu(ghPopup,
 		TPM_RETURNCMD,
 		curPos.x, curPos.y,
 		0,
-		hWnd,
+		wnd,
 		NULL);
 	if (gCmdMap.find(cmd) != gCmdMap.end())
 	{
 		wstring shortcut = gCmdMap[cmd];
-		OpenCommon(hWnd, shortcut.c_str());
+		OpenCommon(wnd, shortcut.c_str());
+		Sleep(WAIT_AFTER_LAUNCH);
 	}
 	return 0;
 }

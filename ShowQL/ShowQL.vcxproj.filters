@@ -101,6 +101,9 @@
     <ClInclude Include="gitrev.h">
       <Filter>01 Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\lsMisc\CHandle.h">
+      <Filter>01 Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ShowQL.rc">
