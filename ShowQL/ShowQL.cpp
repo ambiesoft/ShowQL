@@ -207,11 +207,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	bool bVersion = false;
 	parser.AddOptionRange({ L"-v",L"-version",L"--version" }, 0, &bVersion, ArgEncodingFlags::ArgEncodingFlags_Default,
-		I18N(L"Show version"));
+		I18N(L"Show version (Press CTRL in startup)"));
 
 	bool bHelp = false;
 	parser.AddOptionRange({ L"-h",L"/?",L"-help",L"--help" }, 0, &bHelp, ArgEncodingFlags::ArgEncodingFlags_Default,
 		I18N(L"Show Help"));
+
+	bool bExplorer = false;
+	parser.AddOptionRange({ L"-e",L"--explorer" }, 0, &bExplorer, ArgEncodingFlags::ArgEncodingFlags_Default,
+		I18N(L"Show in Explorer (Press SHIFT in startup)"));
 
 	COption mainArgs(L"",ArgCount::ArgCount_One, ArgEncodingFlags::ArgEncodingFlags_Default,
 		L"Directory to show in menu");
@@ -276,6 +280,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		ErrorExit(stdFormat(I18N(L"'%s' is not a directory."), qlRoot.c_str()));
 	}
 
+	if (bExplorer || GetAsyncKeyState(VK_SHIFT) < 0)
+	{
+		qlRoot = stdAddPathSeparator(qlRoot);
+		OpenCommon(hWnd, qlRoot.c_str());
+		return 0;
+	}
 	ghPopup = CreatePopupMenu();
 	gPopupMap[ghPopup] = wstring();
 	InsertMenu(ghPopup, 0, MF_BYCOMMAND, MENUID_DUMMY, L"<DUMMY>");
