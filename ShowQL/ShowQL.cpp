@@ -263,7 +263,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	{
 		targetFolder = mainArgs.getFirstValue();
 	}
-	CoInitialize(nullptr);
+	CcoInitializer coIniter;
 	CHWnd wnd(CreateSimpleWindow(WndProc));
 
 	if (!targetFolder.empty())
