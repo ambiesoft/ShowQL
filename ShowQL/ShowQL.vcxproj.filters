@@ -57,6 +57,15 @@
     <ClCompile Include="..\..\lsMisc\HighDPI.cpp">
       <Filter>01 Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lsMisc\Is64.cpp">
+      <Filter>01 Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\CreateShortcutFile.cpp">
+      <Filter>01 Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\SHMoveFile.cpp">
+      <Filter>01 Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\lsMisc\CreateSimpleWindow.h">
@@ -105,6 +114,15 @@
       <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lsMisc\stop_watch.h">
+      <Filter>01 Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lsMisc\Is64.h">
+      <Filter>01 Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lsMisc\CreateShortcutFile.h">
+      <Filter>01 Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lsMisc\SHMoveFile.h">
       <Filter>01 Header Files</Filter>
     </ClInclude>
   </ItemGroup>

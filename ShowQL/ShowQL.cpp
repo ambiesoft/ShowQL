@@ -13,6 +13,8 @@
 #include "../../lsMisc/HighDPI.h"
 #include "../../lsMisc/CHandle.h"
 #include "../../lsMisc/stop_watch.h"
+#include "../../lsMisc/Is64.h"
+#include "../../lsMisc/CreateShortcutFile.h"
 #include "../../lsMisc/stdosd/stdosd.h"
 
 #include "gitrev.h"
@@ -33,10 +35,12 @@ TCHAR szT[MAX_PATH];
 
 #define MENUID_DUMMY 1
 #define MENUID_START 2
+HINSTANCE ghInst;
 WORD gMenuIndex;
 map<UINT, wstring> gCmdMap;
 map<HMENU, wstring> gPopupMap;
 wstring qlRoot;
+bool gbNoIcon = false;
 
 #ifndef NDEBUG
 wstop_watch* gsw;
@@ -77,7 +81,7 @@ void ErrorExit(DWORD le)
 //	}
 //}
 
-
+//
 //HBITMAP IconToAlphaBitmap(HICON ico)
 //{
 //	ICONINFO ii;
@@ -121,6 +125,84 @@ void ErrorExit(DWORD le)
 //
 //}
 
+HBITMAP MakeBitMapTransparent(HBITMAP hbmSrc)
+{
+	HDC hdcSrc, hdcDst;
+	HBITMAP hbmOld = nullptr;
+	HBITMAP hbmNew = nullptr;
+	BITMAP bm;
+	COLORREF clrTP, clrBK;
+
+	if ((hdcSrc = CreateCompatibleDC(NULL)) != NULL) {
+		if ((hdcDst = CreateCompatibleDC(NULL)) != NULL) {
+			int nRow, nCol;
+			GetObject(hbmSrc, sizeof(bm), &bm);
+			hbmOld = (HBITMAP)SelectObject(hdcSrc, hbmSrc);
+			hbmNew = CreateBitmap(bm.bmWidth, bm.bmHeight, bm.bmPlanes, bm.bmBitsPixel, NULL);
+			SelectObject(hdcDst, hbmNew);
+
+			BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCCOPY);
+
+			clrTP = GetPixel(hdcDst, 0, 0);// Get color of first pixel at 0,0
+			clrBK = GetSysColor(COLOR_MENU);// Get the current background color of the menu
+
+			for (nRow = 0; nRow < bm.bmHeight; nRow++)// work our way through all the pixels changing their color
+				for (nCol = 0; nCol < bm.bmWidth; nCol++)// when we hit our set transparency color.
+					if (GetPixel(hdcDst, nCol, nRow) == clrTP)
+						SetPixel(hdcDst, nCol, nRow, clrBK);
+
+			DeleteDC(hdcDst);
+		}
+		DeleteDC(hdcSrc);
+
+	}
+	return hbmNew;// return our transformed bitmap.
+}
+
+HICON getIconFromShortcut(LPCWSTR pShortcut)
+{
+	//wstring targetExe;
+	//wstring iconPath;
+	//GetShortcutFileInfo(pShortcut, &targetExe, &iconPath, nullptr, nullptr, nullptr);
+	if (true)
+	{
+		// const wstring loadString = !iconPath.empty() ? iconPath.c_str() : (!targetExe.empty() ? targetExe.c_str() : pShortcut);
+		//HICON iT= ExtractIcon(ghInst, loadString.c_str(), 0);
+		//if (iT)
+		//	return iT;
+		SHFILEINFO sfi = { 0 };
+		if (!SHGetFileInfo(pShortcut,
+			0,
+			&sfi,
+			sizeof(sfi),
+			SHGFI_ICON | SHGFI_SMALLICON))
+		{
+			//if (!SHGetFileInfo(pShortcut,
+			//	0,
+			//	&sfi,
+			//	sizeof(sfi),
+			//	SHGFI_ICON | SHGFI_SMALLICON))
+			{
+				ErrorExit(GetLastError());
+			}
+		}
+		return sfi.hIcon;
+	}
+	else
+	{
+		return ExtractIcon(ghInst, pShortcut, 0);
+	}
+}
+HBITMAP getMenuBitmap(HICON hIcon)
+{
+	{
+		ICONINFO iconInfo;
+		if (!GetIconInfo(hIcon, &iconInfo))
+			ErrorExit(GetLastError());
+		return (iconInfo.hbmColor);
+		// return MakeBitMapTransparent(iconInfo.hbmColor);
+	}
+}
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -164,6 +246,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						gPopupMap[hPopup] = stdCombinePath(qlDir, fi[i].cFileName);
 					}
 				}
+				
+				
 				for (UINT i = 0; i < fi.GetCount(); ++i)
 				{
 					if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
@@ -174,31 +258,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						UINT cmd = gMenuIndex++ + MENUID_START;
 						AppendMenu(hMenu, MF_BYCOMMAND, cmd,
 							stdGetFileNameWitoutExtension(fi[i].cFileName).c_str());
-					
 						const wstring full = stdCombinePath(qlDir, fi[i].cFileName);
-						SHFILEINFO sfi = { 0 };
-						if (!SHGetFileInfo(full.c_str(),
-							0,
-							&sfi,
-							sizeof(sfi),
-							SHGFI_ICON | SHGFI_SMALLICON))
+						if (!gbNoIcon)
 						{
-							ErrorExit(GetLastError());
+							HICON hIcon = getIconFromShortcut(full.c_str());
+							TRACE_STOPWATCH(L"WM_INITMENUPOPUP SHGetFileInfo");
+							HBITMAP hBitmap = getMenuBitmap(hIcon);
+							MENUITEMINFO mii;
+							mii.cbSize = sizeof(mii);
+							mii.fMask = MIIM_BITMAP;
+							mii.hbmpItem = hBitmap;
+							if (!SetMenuItemInfo(hMenu, cmd, FALSE, &mii))
+								ErrorExit(GetLastError());
+							TRACE_STOPWATCH(L"WM_INITMENUPOPUP SetMenuItemInfo");
 						}
-						TRACE_STOPWATCH(L"WM_INITMENUPOPUP SHGetFileInfo");
-						ICONINFO iconInfo;
-						if (!GetIconInfo(sfi.hIcon, &iconInfo))
-							ErrorExit(GetLastError());
-						TRACE_STOPWATCH(L"WM_INITMENUPOPUP GetIconInfo");
-						HBITMAP hBitmap = iconInfo.hbmColor;
-						//HBITMAP hBitmap = ggg(sfi.hIcon);
-						MENUITEMINFO mii;
-						mii.cbSize = sizeof(mii);
-						mii.fMask = MIIM_BITMAP;
-						mii.hbmpItem = hBitmap;
-						if (!SetMenuItemInfo(hMenu, cmd, FALSE, &mii))
-							ErrorExit(GetLastError());
-						TRACE_STOPWATCH(L"WM_INITMENUPOPUP SetMenuItemInfo");
 						gCmdMap[cmd] = full;
 					}
 				}
@@ -213,11 +286,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+
+wstring getMessageTitleString()
+{
+	return stdFormat(L"%s v%s (%s)",
+		APPNAME,
+		GetVersionString(nullptr, 3).c_str(),
+		Is64BitProcess() ? L"x64" : L"x86");
+}
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
 	_In_ LPWSTR    lpCmdLine,
 	_In_ int       nCmdShow)
 {
+	ghInst = hInstance;
 #ifndef NDEBUG
 	gsw = new wstop_watch();
 #endif
@@ -226,15 +308,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	bool bVersion = false;
 	parser.AddOptionRange({ L"-v",L"-version",L"--version" }, 0, &bVersion, ArgEncodingFlags::ArgEncodingFlags_Default,
-		I18N(L"Show version (Press CTRL in startup)"));
+		I18N(L"Shows version (Press CTRL in startup)"));
 
 	bool bHelp = false;
 	parser.AddOptionRange({ L"-h",L"/?",L"-help",L"--help" }, 0, &bHelp, ArgEncodingFlags::ArgEncodingFlags_Default,
-		I18N(L"Show Help"));
+		I18N(L"Shows Help"));
 
 	bool bExplorer = false;
 	parser.AddOptionRange({ L"-e",L"--explorer" }, 0, &bExplorer, ArgEncodingFlags::ArgEncodingFlags_Default,
-		I18N(L"Show in Explorer (Press SHIFT in startup)"));
+		I18N(L"Shows in Explorer (Press SHIFT in startup)"));
+
+	parser.AddOptionRange({ L"-ni",L"--no-icon" }, 0, &gbNoIcon, ArgEncodingFlags::ArgEncodingFlags_Default,
+		I18N(L"Shows no icons"));
 
 	COption mainArgs(L"",ArgCount::ArgCount_One, ArgEncodingFlags::ArgEncodingFlags_Default,
 		L"Directory to show in menu");
@@ -257,7 +342,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			L"\n", L"\r\n");
 		MessageBox(nullptr,
 			message.c_str(),
-			APPNAME,
+			getMessageTitleString().c_str(),
 			MB_ICONINFORMATION);
 		return 0;
 	}
@@ -265,8 +350,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	{
 		MessageBox(nullptr,
 			parser.getHelpMessage().c_str(),
-			stdFormat(L"%s v%s",
-				APPNAME, GetVersionString(nullptr, 3).c_str()).c_str(),
+			getMessageTitleString().c_str(),
 			MB_ICONINFORMATION);
 		return 0;
 	}
