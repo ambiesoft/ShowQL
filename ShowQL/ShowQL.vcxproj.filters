@@ -104,6 +104,9 @@
     <ClInclude Include="..\..\lsMisc\CHandle.h">
       <Filter>01 Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\lsMisc\stop_watch.h">
+      <Filter>01 Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ShowQL.rc">

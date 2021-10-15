@@ -12,6 +12,7 @@
 #include "../../lsMisc/GetVersionString.h"
 #include "../../lsMisc/HighDPI.h"
 #include "../../lsMisc/CHandle.h"
+#include "../../lsMisc/stop_watch.h"
 #include "../../lsMisc/stdosd/stdosd.h"
 
 #include "gitrev.h"
@@ -36,6 +37,13 @@ WORD gMenuIndex;
 map<UINT, wstring> gCmdMap;
 map<HMENU, wstring> gPopupMap;
 wstring qlRoot;
+
+#ifndef NDEBUG
+wstop_watch* gsw;
+#define TRACE_STOPWATCH(S) do { OutputDebugString(S);OutputDebugString(L" "); OutputDebugString(gsw->lookDiff().c_str()); OutputDebugString(L"\r\n"); }while(false)
+#else
+#define TRACE_STOPWATCH(S) do{}while(false)
+#endif
 
 void ErrorExit(const wchar_t* pMessage, int ret = -1)
 {
@@ -132,6 +140,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			WORD index = LOWORD(lParam);
 			if (true) //hMenu == ghPopup)
 			{
+				TRACE_STOPWATCH(L"WM_INITMENUPOPUP");
 				while (DeleteMenu(hMenu, 0, MF_BYPOSITION))
 					;
 				
@@ -142,6 +151,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				FILESINFOW fi;
 				if (!GetFilesInfoW(qlDir.c_str(), fi))
 					ErrorExit(GetLastError());
+				TRACE_STOPWATCH(L"WM_INITMENUPOPUP GetFilesInfoW");
 				for (UINT i = 0; i < fi.GetCount(); ++i)
 				{
 					if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
@@ -160,6 +170,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						continue;
 					if (!(fi[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 					{
+						TRACE_STOPWATCH(L"WM_INITMENUPOPUP process file");
 						UINT cmd = gMenuIndex++ + MENUID_START;
 						AppendMenu(hMenu, MF_BYCOMMAND, cmd,
 							stdGetFileNameWitoutExtension(fi[i].cFileName).c_str());
@@ -174,10 +185,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						{
 							ErrorExit(GetLastError());
 						}
-						
+						TRACE_STOPWATCH(L"WM_INITMENUPOPUP SHGetFileInfo");
 						ICONINFO iconInfo;
 						if (!GetIconInfo(sfi.hIcon, &iconInfo))
 							ErrorExit(GetLastError());
+						TRACE_STOPWATCH(L"WM_INITMENUPOPUP GetIconInfo");
 						HBITMAP hBitmap = iconInfo.hbmColor;
 						//HBITMAP hBitmap = ggg(sfi.hIcon);
 						MENUITEMINFO mii;
@@ -186,6 +198,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						mii.hbmpItem = hBitmap;
 						if (!SetMenuItemInfo(hMenu, cmd, FALSE, &mii))
 							ErrorExit(GetLastError());
+						TRACE_STOPWATCH(L"WM_INITMENUPOPUP SetMenuItemInfo");
 						gCmdMap[cmd] = full;
 					}
 				}
@@ -205,6 +218,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_ LPWSTR    lpCmdLine,
 	_In_ int       nCmdShow)
 {
+#ifndef NDEBUG
+	gsw = new wstop_watch();
+#endif
 	InitHighDPISupport();
 	CCommandLineParser parser(I18N(L"Show QuickLaunch Menus"), APPNAME);
 
@@ -254,6 +270,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			MB_ICONINFORMATION);
 		return 0;
 	}
+
+	TRACE_STOPWATCH(L"Started");
+
 	wstring targetFolder;
 	if (mainArgs.getValueCount() > 1)
 	{
@@ -296,12 +315,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	POINT curPos;
 	GetCursorPos(&curPos);
 	SetForegroundWindow(wnd);
+	TRACE_STOPWATCH(L"Before TrackPopup");
 	UINT cmd = TrackPopupMenu(ghPopup,
 		TPM_RETURNCMD,
 		curPos.x, curPos.y,
 		0,
 		wnd,
 		NULL);
+	TRACE_STOPWATCH(L"After TrackPopup");
 	if (gCmdMap.find(cmd) != gCmdMap.end())
 	{
 		wstring shortcut = gCmdMap[cmd];
