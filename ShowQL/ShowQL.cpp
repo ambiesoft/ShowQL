@@ -34,8 +34,11 @@ using namespace std;
 HMENU ghPopup;
 TCHAR szT[MAX_PATH];
 
-#define MENUID_DUMMY 1
-#define MENUID_START 2
+enum {
+	MENUID_DUMMY = 1,
+	MENUID_NOITEM,
+	MENUID_START
+};
 HINSTANCE ghInst;
 WORD gMenuIndex;
 map<UINT, wstring> gCmdMap;
@@ -206,39 +209,33 @@ HBITMAP MakeBitMapTransparent2(HBITMAP hbmSrcMask, HBITMAP hbmSrcColor)
 
 HICON getIconFromShortcut(LPCWSTR pShortcut)
 {
-	bool bUseTargetExe = false;
-	
+	bool bUseTargetExe = true;
+
 	wstring targetExe;
 	wstring iconPath;
 	if (bUseTargetExe)
 		GetShortcutFileInfo(pShortcut, &targetExe, &iconPath, nullptr, nullptr, nullptr);
-	if (true)
+	wstring loadString;
+	if (bUseTargetExe)
+		loadString = !iconPath.empty() ? iconPath.c_str() : (!targetExe.empty() ? targetExe.c_str() : pShortcut);
+	SHFILEINFO sfi = { 0 };
+	if (!SHGetFileInfo(bUseTargetExe ? loadString.c_str() : pShortcut,
+		0,
+		&sfi,
+		sizeof(sfi),
+		SHGFI_ICON | SHGFI_SMALLICON))
 	{
-		wstring loadString;
-		if (bUseTargetExe)
-			loadString = !iconPath.empty() ? iconPath.c_str() : (!targetExe.empty() ? targetExe.c_str() : pShortcut);
-		SHFILEINFO sfi = { 0 };
-		if (!SHGetFileInfo(bUseTargetExe ? loadString.c_str() : pShortcut,
+		if (!SHGetFileInfo(pShortcut,
 			0,
 			&sfi,
 			sizeof(sfi),
 			SHGFI_ICON | SHGFI_SMALLICON))
 		{
-			if (!SHGetFileInfo(pShortcut,
-				0,
-				&sfi,
-				sizeof(sfi),
-				SHGFI_ICON | SHGFI_SMALLICON))
-			{
-				ErrorExit(GetLastError());
-			}
+			ErrorExit(GetLastError());
 		}
-		return sfi.hIcon;
 	}
-	else
-	{
-		return ExtractIcon(ghInst, pShortcut, 0);
-	}
+	return sfi.hIcon;
+
 }
 
 HBITMAP createTransparentBitmap(HBITMAP hbmMask, HBITMAP hbmColor)
@@ -368,19 +365,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					SelectObject(dis->hDC, old);
 				}
 			}
-			wstring scPath = gCmdMap[dis->itemID];
-			SHFILEINFO sfi = { 0 };
-			if (!SHGetFileInfo(scPath.c_str(),
-				0,
-				&sfi,
-				sizeof(sfi),
-				SHGFI_ICON | SHGFI_SMALLICON))
-			{
-				ErrorExit(GetLastError());
-			}
+			HICON hIcon = getIconFromShortcut(gCmdMap[dis->itemID].c_str());
 			if (!DrawIconEx(dis->hDC, 
 				dis->rcItem.left, dis->rcItem.top + gItemDeltaY,
-				sfi.hIcon, 16, 16, 0, 0, DI_MASK | DI_IMAGE))
+				hIcon, 16, 16, 0, 0, DI_MASK | DI_IMAGE))
 				ErrorExit(GetLastError());
 
 			RECT rS = dis->rcItem;
@@ -396,81 +384,77 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			HMENU hMenu = (HMENU)wParam;
 			WORD index = LOWORD(lParam);
-			if (true) //hMenu == ghPopup)
+			TRACE_STOPWATCH(L"WM_INITMENUPOPUP");
+			while (DeleteMenu(hMenu, 0, MF_BYPOSITION))
+				;
+
+			wstring sel = gPopupMap[hMenu];
+			DTRACE(L"sel=" + sel);
+			wstring qlDir = sel.empty() ? qlRoot : sel;
+			DTRACE(L"qlDir=" + qlDir);
+			FILESINFOW fi;
+			if (!GetFilesInfoW(qlDir.c_str(), fi))
+				ErrorExit(GetLastError());
+			TRACE_STOPWATCH(L"WM_INITMENUPOPUP GetFilesInfoW");
+			for (UINT i = 0; i < fi.GetCount(); ++i)
 			{
-				TRACE_STOPWATCH(L"WM_INITMENUPOPUP");
-				while (DeleteMenu(hMenu, 0, MF_BYPOSITION))
-					;
-				
-				wstring sel = gPopupMap[hMenu];
-				DTRACE(L"sel=" + sel);
-				wstring qlDir = sel.empty() ? qlRoot : sel;
-				DTRACE(L"qlDir=" + qlDir);
-				FILESINFOW fi;
-				if (!GetFilesInfoW(qlDir.c_str(), fi))
-					ErrorExit(GetLastError());
-				TRACE_STOPWATCH(L"WM_INITMENUPOPUP GetFilesInfoW");
-				for (UINT i = 0; i < fi.GetCount(); ++i)
+				if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+					continue;
+				if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				{
-					if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-						continue;
-					if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-					{
-						HMENU hPopup = CreatePopupMenu();
-						InsertMenu(hPopup, 0, MF_BYCOMMAND, MENUID_DUMMY, L"<DUMMY>");
-						AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hPopup, fi[i].cFileName);
-						gPopupMap[hPopup] = stdCombinePath(qlDir, fi[i].cFileName);
-					}
-				}
-				
-				
-				for (UINT i = 0; i < fi.GetCount(); ++i)
-				{
-					if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-						continue;
-					if (!(fi[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-					{
-						TRACE_STOPWATCH(L"WM_INITMENUPOPUP process file");
-						UINT cmd = gMenuIndex++ + MENUID_START;
-						AppendMenu(hMenu, MF_BYCOMMAND, cmd,
-							stdGetFileNameWitoutExtension(fi[i].cFileName).c_str());
-
-						if (!gbNoIcon)
-						{
-							// Enable OwnerDraw
-							MENUITEMINFO mii;
-							ZeroMemory(&mii, sizeof(mii));
-							mii.cbSize = sizeof(mii);
-							mii.fMask = MIIM_TYPE;
-							GetMenuItemInfo(hMenu, cmd, FALSE, &mii);
-							mii.cbSize = sizeof(mii);
-							mii.fMask = MIIM_TYPE;
-							mii.fType |= MFT_OWNERDRAW;
-							SetMenuItemInfo(hMenu, cmd, FALSE, &mii);
-						}
-
-						const wstring full = stdCombinePath(qlDir, fi[i].cFileName);
-						if (!gbNoIcon)
-						{
-							//HICON hIcon = getIconFromShortcut(full.c_str());
-							//TRACE_STOPWATCH(L"WM_INITMENUPOPUP SHGetFileInfo");
-							//HBITMAP hBitmap = getMenuBitmap(hIcon);
-							//MENUITEMINFO mii;
-							//mii.cbSize = sizeof(mii);
-							//mii.fMask = MIIM_BITMAP;
-							//mii.hbmpItem = hBitmap;
-							//if (!SetMenuItemInfo(hMenu, cmd, FALSE, &mii))
-							//	ErrorExit(GetLastError());
-							//TRACE_STOPWATCH(L"WM_INITMENUPOPUP SetMenuItemInfo");
-						}
-						gCmdMap[cmd] = full;
-					}
+					HMENU hPopup = CreatePopupMenu();
+					InsertMenu(hPopup, 0, MF_BYCOMMAND, MENUID_DUMMY, L"<DUMMY>");
+					AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hPopup, fi[i].cFileName);
+					gPopupMap[hPopup] = stdCombinePath(qlDir, fi[i].cFileName);
 				}
 			}
-			else
+
+
+			for (UINT i = 0; i < fi.GetCount(); ++i)
 			{
-				// sub dir
-				UINT cmd = gMenuIndex++ + MENUID_START;
+				if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+					continue;
+				if (!(fi[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+				{
+					TRACE_STOPWATCH(L"WM_INITMENUPOPUP process file");
+					UINT cmd = gMenuIndex++ + MENUID_START;
+					AppendMenu(hMenu, MF_BYCOMMAND, cmd,
+						stdGetFileNameWitoutExtension(fi[i].cFileName).c_str());
+
+					if (!gbNoIcon)
+					{
+						// Enable OwnerDraw
+						MENUITEMINFO mii;
+						ZeroMemory(&mii, sizeof(mii));
+						mii.cbSize = sizeof(mii);
+						mii.fMask = MIIM_TYPE;
+						GetMenuItemInfo(hMenu, cmd, FALSE, &mii);
+						mii.cbSize = sizeof(mii);
+						mii.fMask = MIIM_TYPE;
+						mii.fType |= MFT_OWNERDRAW;
+						SetMenuItemInfo(hMenu, cmd, FALSE, &mii);
+					}
+
+					const wstring full = stdCombinePath(qlDir, fi[i].cFileName);
+					if (!gbNoIcon)
+					{
+						//HICON hIcon = getIconFromShortcut(full.c_str());
+						//TRACE_STOPWATCH(L"WM_INITMENUPOPUP SHGetFileInfo");
+						//HBITMAP hBitmap = getMenuBitmap(hIcon);
+						//MENUITEMINFO mii;
+						//mii.cbSize = sizeof(mii);
+						//mii.fMask = MIIM_BITMAP;
+						//mii.hbmpItem = hBitmap;
+						//if (!SetMenuItemInfo(hMenu, cmd, FALSE, &mii))
+						//	ErrorExit(GetLastError());
+						//TRACE_STOPWATCH(L"WM_INITMENUPOPUP SetMenuItemInfo");
+					}
+					gCmdMap[cmd] = full;
+				}
+			}
+			if (0 == GetMenuItemCount(hMenu))
+			{
+				InsertMenu(hMenu, 0, MF_BYCOMMAND|MF_DISABLED, MENUID_NOITEM, L"<No Items>");
 			}
 		}
 		break;
