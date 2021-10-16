@@ -20,6 +20,7 @@
 #include "gitrev.h"
 
 #pragma comment(lib, "Shell32.lib")
+#pragma comment(lib, "Msimg32.lib")
 
 using namespace Ambiesoft;
 using namespace Ambiesoft::stdosd;
@@ -41,7 +42,8 @@ map<UINT, wstring> gCmdMap;
 map<HMENU, wstring> gPopupMap;
 wstring qlRoot;
 bool gbNoIcon = false;
-
+UINT gItemHeight = 20;
+UINT gItemDeltaY = 2;
 #ifndef NDEBUG
 wstop_watch* gsw;
 #define TRACE_STOPWATCH(S) do { OutputDebugString(S);OutputDebugString(L" "); OutputDebugString(gsw->lookDiff().c_str()); OutputDebugString(L"\r\n"); }while(false)
@@ -158,30 +160,75 @@ HBITMAP MakeBitMapTransparent(HBITMAP hbmSrc)
 	}
 	return hbmNew;// return our transformed bitmap.
 }
+HBITMAP MakeBitMapTransparent2(HBITMAP hbmSrcMask, HBITMAP hbmSrcColor)
+{
+	HDC hdcSrc, hdcDst;
+	HBITMAP hbmOld = nullptr;
+	HBITMAP hbmNew = nullptr;
+	BITMAP bm;
+//	COLORREF clrTP, clrBK;
+
+	if ((hdcSrc = CreateCompatibleDC(NULL)) != NULL) {
+		if ((hdcDst = CreateCompatibleDC(NULL)) != NULL) {
+			//int nRow, nCol;
+			GetObject(hbmSrcColor, sizeof(bm), &bm);
+
+			hbmOld = (HBITMAP)SelectObject(hdcSrc, hbmSrcColor);
+			hbmNew = CreateBitmap(bm.bmWidth, bm.bmHeight, bm.bmPlanes, bm.bmBitsPixel, NULL);
+			SelectObject(hdcDst, hbmNew);
+
+			BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCCOPY);
+
+			SelectObject(hdcSrc, hbmSrcMask);
+			// BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCINVERT);
+
+			COLORREF crTrans = GetPixel(hdcSrc, 0, 0);
+			TransparentBlt(
+				hdcDst, 0, 0, bm.bmWidth, bm.bmHeight,
+				hdcSrc, 0, 0, bm.bmWidth, bm.bmHeight,
+				crTrans);
+
+			//clrTP = GetPixel(hdcDst, 0, 0);// Get color of first pixel at 0,0
+			//clrBK = GetSysColor(COLOR_MENU);// Get the current background color of the menu
+
+			//for (nRow = 0; nRow < bm.bmHeight; nRow++)// work our way through all the pixels changing their color
+			//	for (nCol = 0; nCol < bm.bmWidth; nCol++)// when we hit our set transparency color.
+			//		if (GetPixel(hdcDst, nCol, nRow) == clrTP)
+			//			SetPixel(hdcDst, nCol, nRow, clrBK);
+
+			DeleteDC(hdcDst);
+		}
+		DeleteDC(hdcSrc);
+
+	}
+	return hbmNew;// return our transformed bitmap.
+}
 
 HICON getIconFromShortcut(LPCWSTR pShortcut)
 {
-	//wstring targetExe;
-	//wstring iconPath;
-	//GetShortcutFileInfo(pShortcut, &targetExe, &iconPath, nullptr, nullptr, nullptr);
+	bool bUseTargetExe = false;
+	
+	wstring targetExe;
+	wstring iconPath;
+	if (bUseTargetExe)
+		GetShortcutFileInfo(pShortcut, &targetExe, &iconPath, nullptr, nullptr, nullptr);
 	if (true)
 	{
-		// const wstring loadString = !iconPath.empty() ? iconPath.c_str() : (!targetExe.empty() ? targetExe.c_str() : pShortcut);
-		//HICON iT= ExtractIcon(ghInst, loadString.c_str(), 0);
-		//if (iT)
-		//	return iT;
+		wstring loadString;
+		if (bUseTargetExe)
+			loadString = !iconPath.empty() ? iconPath.c_str() : (!targetExe.empty() ? targetExe.c_str() : pShortcut);
 		SHFILEINFO sfi = { 0 };
-		if (!SHGetFileInfo(pShortcut,
+		if (!SHGetFileInfo(bUseTargetExe ? loadString.c_str() : pShortcut,
 			0,
 			&sfi,
 			sizeof(sfi),
 			SHGFI_ICON | SHGFI_SMALLICON))
 		{
-			//if (!SHGetFileInfo(pShortcut,
-			//	0,
-			//	&sfi,
-			//	sizeof(sfi),
-			//	SHGFI_ICON | SHGFI_SMALLICON))
+			if (!SHGetFileInfo(pShortcut,
+				0,
+				&sfi,
+				sizeof(sfi),
+				SHGFI_ICON | SHGFI_SMALLICON))
 			{
 				ErrorExit(GetLastError());
 			}
@@ -193,14 +240,84 @@ HICON getIconFromShortcut(LPCWSTR pShortcut)
 		return ExtractIcon(ghInst, pShortcut, 0);
 	}
 }
+
+HBITMAP createTransparentBitmap(HBITMAP hbmMask, HBITMAP hbmColor)
+{
+	BITMAP bm;
+	if (0 == GetObject(hbmColor, sizeof(BITMAP), &bm))
+		ErrorExit(GetLastError());
+	{
+		BITMAP bmT;
+		if (0 == GetObject(hbmMask, sizeof(bmT), &bmT))
+			ErrorExit(GetLastError());
+		if (bm.bmWidth != bmT.bmWidth || bm.bmHeight != bmT.bmHeight)
+			ErrorExit(L"Not same size");
+	}
+	HDC hDc= GetDC(NULL);
+	HDC hDcCompatMask = CreateCompatibleDC(hDc);
+	if (!hDcCompatMask)
+		ErrorExit(GetLastError());
+	// CreateCompatibleBitmap(hDcCompatMask, bm.bmWidth, bm.bmHeight);
+	HGDIOBJ oldMask = SelectObject(hDcCompatMask, hbmMask);
+
+	HDC hDcCompatColor = CreateCompatibleDC(hDc);
+	if (!hDcCompatColor)
+		ErrorExit(GetLastError());
+	HGDIOBJ oldColor = SelectObject(hDcCompatColor, hbmColor);
+
+	//if (!BitBlt(
+	//	hDcCompatMask,
+	//	0, 0,
+	//	bm.bmWidth, bm.bmHeight,
+
+	//	hDcCompatColor,
+	//	0, 0,
+
+	//	SRCCOPY))// INVERT))
+	//{
+	//	ErrorExit(GetLastError());
+	//}
+
+
+	SelectObject(hDcCompatMask, oldMask);
+	SelectObject(hDcCompatColor, oldColor);
+	DeleteDC(hDcCompatMask);
+	DeleteDC(hDcCompatColor);
+	return hbmMask;
+}
+
+HBITMAP createTransparentBitmap2(HBITMAP hbmMask, HBITMAP hbmColor)
+{
+	BITMAP bmp;
+	GetObject(hbmMask, sizeof(bmp), &bmp);
+	HDC hMemDCMask = CreateCompatibleDC(NULL);
+	HGDIOBJ hOldMask = SelectObject(hMemDCMask, hbmMask);
+	HDC hMemDC = CreateCompatibleDC(NULL);
+	HGDIOBJ hOld = SelectObject(hMemDC, hbmColor);
+
+	COLORREF crTrans = GetPixel(hMemDCMask, 0, 0);
+	TransparentBlt(
+		hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight,
+		hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight,
+		crTrans);
+	SelectObject(hMemDCMask, hOldMask);
+	SelectObject(hMemDC, hOld);
+	//DeleteObject(hbmMask);
+	//DeleteObject(hbmColor);
+	//DeleteObject(hMemDC);
+	
+	return hbmMask;
+}
 HBITMAP getMenuBitmap(HICON hIcon)
 {
 	{
-		ICONINFO iconInfo;
-		if (!GetIconInfo(hIcon, &iconInfo))
+		ICONINFO ii;
+		if (!GetIconInfo(hIcon, &ii))
 			ErrorExit(GetLastError());
-		return (iconInfo.hbmColor);
-		// return MakeBitMapTransparent(iconInfo.hbmColor);
+		// return (iconInfo.hbmColor);
+		// return createTransparentBitmap2(ii.hbmMask, ii.hbmColor);
+		// return MakeBitMapTransparent2(ii.hbmMask, ii.hbmColor);
+		return MakeBitMapTransparent(ii.hbmColor);
 	}
 }
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -216,6 +333,65 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		//	glastSelectedPopup = szT;
 		//}
 		//break;
+
+		case WM_MEASUREITEM:
+		{
+			MEASUREITEMSTRUCT* mis = (MEASUREITEMSTRUCT*)lParam;
+			GetMenuString(ghPopup, mis->itemID, szT, _countof(szT), MF_BYCOMMAND);
+			mis->itemHeight = gItemHeight;
+			mis->itemWidth = 128;
+			return TRUE;
+		}
+		break;
+
+		case WM_DRAWITEM:
+		{
+			DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lParam;
+			DTRACE(stdFormat(L"DrawAction=%d", dis->itemAction));
+			if (dis->itemAction == ODA_SELECT)
+			{
+				
+				if (dis->itemState & ODS_SELECTED)
+				{
+					SetBkColor(dis->hDC, GetSysColor(COLOR_HIGHLIGHT));
+					SetTextColor(dis->hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));// RGB(0xff, 0xff, 0xff));
+					HBRUSH brush = GetSysColorBrush(COLOR_MENUHILIGHT); //create brush
+					HBRUSH old =(HBRUSH) SelectObject(dis->hDC, brush);
+					FillRect(dis->hDC, &dis->rcItem, brush);
+					SelectObject(dis->hDC, old);
+				}
+				else
+				{
+					HBRUSH brush = GetSysColorBrush(COLOR_MENU); //create brush
+					HBRUSH old = (HBRUSH)SelectObject(dis->hDC, brush);
+					FillRect(dis->hDC, &dis->rcItem, brush);
+					SelectObject(dis->hDC, old);
+				}
+			}
+			wstring scPath = gCmdMap[dis->itemID];
+			SHFILEINFO sfi = { 0 };
+			if (!SHGetFileInfo(scPath.c_str(),
+				0,
+				&sfi,
+				sizeof(sfi),
+				SHGFI_ICON | SHGFI_SMALLICON))
+			{
+				ErrorExit(GetLastError());
+			}
+			if (!DrawIconEx(dis->hDC, 
+				dis->rcItem.left, dis->rcItem.top + gItemDeltaY,
+				sfi.hIcon, 16, 16, 0, 0, DI_MASK | DI_IMAGE))
+				ErrorExit(GetLastError());
+
+			RECT rS = dis->rcItem;
+			rS.top += gItemDeltaY;
+			rS.left += 16 + 4;
+			GetMenuString(ghPopup, dis->itemID, szT, _countof(szT), MF_BYCOMMAND);
+			DrawText(dis->hDC, szT, lstrlen(szT), &rS, 0);
+
+			return TRUE;
+		}
+		break;
 		case WM_INITMENUPOPUP:
 		{
 			HMENU hMenu = (HMENU)wParam;
@@ -258,19 +434,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 						UINT cmd = gMenuIndex++ + MENUID_START;
 						AppendMenu(hMenu, MF_BYCOMMAND, cmd,
 							stdGetFileNameWitoutExtension(fi[i].cFileName).c_str());
+
+						if (!gbNoIcon)
+						{
+							// Enable OwnerDraw
+							MENUITEMINFO mii;
+							ZeroMemory(&mii, sizeof(mii));
+							mii.cbSize = sizeof(mii);
+							mii.fMask = MIIM_TYPE;
+							GetMenuItemInfo(hMenu, cmd, FALSE, &mii);
+							mii.cbSize = sizeof(mii);
+							mii.fMask = MIIM_TYPE;
+							mii.fType |= MFT_OWNERDRAW;
+							SetMenuItemInfo(hMenu, cmd, FALSE, &mii);
+						}
+
 						const wstring full = stdCombinePath(qlDir, fi[i].cFileName);
 						if (!gbNoIcon)
 						{
-							HICON hIcon = getIconFromShortcut(full.c_str());
-							TRACE_STOPWATCH(L"WM_INITMENUPOPUP SHGetFileInfo");
-							HBITMAP hBitmap = getMenuBitmap(hIcon);
-							MENUITEMINFO mii;
-							mii.cbSize = sizeof(mii);
-							mii.fMask = MIIM_BITMAP;
-							mii.hbmpItem = hBitmap;
-							if (!SetMenuItemInfo(hMenu, cmd, FALSE, &mii))
-								ErrorExit(GetLastError());
-							TRACE_STOPWATCH(L"WM_INITMENUPOPUP SetMenuItemInfo");
+							//HICON hIcon = getIconFromShortcut(full.c_str());
+							//TRACE_STOPWATCH(L"WM_INITMENUPOPUP SHGetFileInfo");
+							//HBITMAP hBitmap = getMenuBitmap(hIcon);
+							//MENUITEMINFO mii;
+							//mii.cbSize = sizeof(mii);
+							//mii.fMask = MIIM_BITMAP;
+							//mii.hbmpItem = hBitmap;
+							//if (!SetMenuItemInfo(hMenu, cmd, FALSE, &mii))
+							//	ErrorExit(GetLastError());
+							//TRACE_STOPWATCH(L"WM_INITMENUPOPUP SetMenuItemInfo");
 						}
 						gCmdMap[cmd] = full;
 					}
