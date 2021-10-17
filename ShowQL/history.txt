@@ -1,3 +1,6 @@
+2021/10/17 v1.0.9
+Set proper menu size
+
 2021/10/13 v1.0.8
 No shortcut arrow on icon
 

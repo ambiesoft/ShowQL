@@ -3,6 +3,8 @@
 
 #include <string>
 #include <map>
+#include <memory>
+
 #include "../../lsMisc/CreateSimpleWindow.h"
 #include "../../lsMisc/GetLastErrorString.h"
 #include "../../lsMisc/GetFilesInfo.h"
@@ -31,8 +33,9 @@ using namespace std;
 #define WAIT_AFTER_LAUNCH (5 * 1000)
 #define WAIT_FOR_PROCESSIDLE (30 * 1000)
 
-HMENU ghPopup;
+CHMenu ghPopup;
 TCHAR szT[MAX_PATH];
+CHFont gMenuFont;
 
 enum {
 	MENUID_DUMMY = 1,
@@ -45,10 +48,12 @@ map<UINT, wstring> gCmdMap;
 map<HMENU, wstring> gPopupMap;
 wstring qlRoot;
 bool gbNoIcon = false;
-UINT gItemHeight = 20;
-UINT gItemDeltaY = 2;
+int gIconWidth, gIconHeight;
+UINT gItemHeight;
+UINT gItemDeltaY;
+UINT gItemDeltaX;
 #ifndef NDEBUG
-wstop_watch* gsw;
+unique_ptr<wstop_watch> gsw;
 #define TRACE_STOPWATCH(S) do { OutputDebugString(S);OutputDebugString(L" "); OutputDebugString(gsw->lookDiff().c_str()); OutputDebugString(L"\r\n"); }while(false)
 #else
 #define TRACE_STOPWATCH(S) do{}while(false)
@@ -130,85 +135,86 @@ void ErrorExit(DWORD le)
 //
 //}
 
-HBITMAP MakeBitMapTransparent(HBITMAP hbmSrc)
-{
-	HDC hdcSrc, hdcDst;
-	HBITMAP hbmOld = nullptr;
-	HBITMAP hbmNew = nullptr;
-	BITMAP bm;
-	COLORREF clrTP, clrBK;
-
-	if ((hdcSrc = CreateCompatibleDC(NULL)) != NULL) {
-		if ((hdcDst = CreateCompatibleDC(NULL)) != NULL) {
-			int nRow, nCol;
-			GetObject(hbmSrc, sizeof(bm), &bm);
-			hbmOld = (HBITMAP)SelectObject(hdcSrc, hbmSrc);
-			hbmNew = CreateBitmap(bm.bmWidth, bm.bmHeight, bm.bmPlanes, bm.bmBitsPixel, NULL);
-			SelectObject(hdcDst, hbmNew);
-
-			BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCCOPY);
-
-			clrTP = GetPixel(hdcDst, 0, 0);// Get color of first pixel at 0,0
-			clrBK = GetSysColor(COLOR_MENU);// Get the current background color of the menu
-
-			for (nRow = 0; nRow < bm.bmHeight; nRow++)// work our way through all the pixels changing their color
-				for (nCol = 0; nCol < bm.bmWidth; nCol++)// when we hit our set transparency color.
-					if (GetPixel(hdcDst, nCol, nRow) == clrTP)
-						SetPixel(hdcDst, nCol, nRow, clrBK);
-
-			DeleteDC(hdcDst);
-		}
-		DeleteDC(hdcSrc);
-
-	}
-	return hbmNew;// return our transformed bitmap.
-}
-HBITMAP MakeBitMapTransparent2(HBITMAP hbmSrcMask, HBITMAP hbmSrcColor)
-{
-	HDC hdcSrc, hdcDst;
-	HBITMAP hbmOld = nullptr;
-	HBITMAP hbmNew = nullptr;
-	BITMAP bm;
+//HBITMAP MakeBitMapTransparent(HBITMAP hbmSrc)
+//{
+//	HDC hdcSrc, hdcDst;
+//	HBITMAP hbmOld = nullptr;
+//	HBITMAP hbmNew = nullptr;
+//	BITMAP bm;
 //	COLORREF clrTP, clrBK;
+//
+//	if ((hdcSrc = CreateCompatibleDC(NULL)) != NULL) {
+//		if ((hdcDst = CreateCompatibleDC(NULL)) != NULL) {
+//			int nRow, nCol;
+//			GetObject(hbmSrc, sizeof(bm), &bm);
+//			hbmOld = (HBITMAP)SelectObject(hdcSrc, hbmSrc);
+//			hbmNew = CreateBitmap(bm.bmWidth, bm.bmHeight, bm.bmPlanes, bm.bmBitsPixel, NULL);
+//			SelectObject(hdcDst, hbmNew);
+//
+//			BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCCOPY);
+//
+//			clrTP = GetPixel(hdcDst, 0, 0);// Get color of first pixel at 0,0
+//			clrBK = GetSysColor(COLOR_MENU);// Get the current background color of the menu
+//
+//			for (nRow = 0; nRow < bm.bmHeight; nRow++)// work our way through all the pixels changing their color
+//				for (nCol = 0; nCol < bm.bmWidth; nCol++)// when we hit our set transparency color.
+//					if (GetPixel(hdcDst, nCol, nRow) == clrTP)
+//						SetPixel(hdcDst, nCol, nRow, clrBK);
+//
+//			DeleteDC(hdcDst);
+//		}
+//		DeleteDC(hdcSrc);
+//
+//	}
+//	return hbmNew;// return our transformed bitmap.
+//}
+//HBITMAP MakeBitMapTransparent2(HBITMAP hbmSrcMask, HBITMAP hbmSrcColor)
+//{
+//	HDC hdcSrc, hdcDst;
+//	HBITMAP hbmOld = nullptr;
+//	HBITMAP hbmNew = nullptr;
+//	BITMAP bm;
+////	COLORREF clrTP, clrBK;
+//
+//	if ((hdcSrc = CreateCompatibleDC(NULL)) != NULL) {
+//		if ((hdcDst = CreateCompatibleDC(NULL)) != NULL) {
+//			//int nRow, nCol;
+//			GetObject(hbmSrcColor, sizeof(bm), &bm);
+//
+//			hbmOld = (HBITMAP)SelectObject(hdcSrc, hbmSrcColor);
+//			hbmNew = CreateBitmap(bm.bmWidth, bm.bmHeight, bm.bmPlanes, bm.bmBitsPixel, NULL);
+//			SelectObject(hdcDst, hbmNew);
+//
+//			BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCCOPY);
+//
+//			SelectObject(hdcSrc, hbmSrcMask);
+//			// BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCINVERT);
+//
+//			COLORREF crTrans = GetPixel(hdcSrc, 0, 0);
+//			TransparentBlt(
+//				hdcDst, 0, 0, bm.bmWidth, bm.bmHeight,
+//				hdcSrc, 0, 0, bm.bmWidth, bm.bmHeight,
+//				crTrans);
+//
+//			//clrTP = GetPixel(hdcDst, 0, 0);// Get color of first pixel at 0,0
+//			//clrBK = GetSysColor(COLOR_MENU);// Get the current background color of the menu
+//
+//			//for (nRow = 0; nRow < bm.bmHeight; nRow++)// work our way through all the pixels changing their color
+//			//	for (nCol = 0; nCol < bm.bmWidth; nCol++)// when we hit our set transparency color.
+//			//		if (GetPixel(hdcDst, nCol, nRow) == clrTP)
+//			//			SetPixel(hdcDst, nCol, nRow, clrBK);
+//
+//			DeleteDC(hdcDst);
+//		}
+//		DeleteDC(hdcSrc);
+//
+//	}
+//	return hbmNew;// return our transformed bitmap.
+//}
 
-	if ((hdcSrc = CreateCompatibleDC(NULL)) != NULL) {
-		if ((hdcDst = CreateCompatibleDC(NULL)) != NULL) {
-			//int nRow, nCol;
-			GetObject(hbmSrcColor, sizeof(bm), &bm);
-
-			hbmOld = (HBITMAP)SelectObject(hdcSrc, hbmSrcColor);
-			hbmNew = CreateBitmap(bm.bmWidth, bm.bmHeight, bm.bmPlanes, bm.bmBitsPixel, NULL);
-			SelectObject(hdcDst, hbmNew);
-
-			BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCCOPY);
-
-			SelectObject(hdcSrc, hbmSrcMask);
-			// BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCINVERT);
-
-			COLORREF crTrans = GetPixel(hdcSrc, 0, 0);
-			TransparentBlt(
-				hdcDst, 0, 0, bm.bmWidth, bm.bmHeight,
-				hdcSrc, 0, 0, bm.bmWidth, bm.bmHeight,
-				crTrans);
-
-			//clrTP = GetPixel(hdcDst, 0, 0);// Get color of first pixel at 0,0
-			//clrBK = GetSysColor(COLOR_MENU);// Get the current background color of the menu
-
-			//for (nRow = 0; nRow < bm.bmHeight; nRow++)// work our way through all the pixels changing their color
-			//	for (nCol = 0; nCol < bm.bmWidth; nCol++)// when we hit our set transparency color.
-			//		if (GetPixel(hdcDst, nCol, nRow) == clrTP)
-			//			SetPixel(hdcDst, nCol, nRow, clrBK);
-
-			DeleteDC(hdcDst);
-		}
-		DeleteDC(hdcSrc);
-
-	}
-	return hbmNew;// return our transformed bitmap.
-}
-
-HICON getIconFromShortcut(LPCWSTR pShortcut)
+CHIcon getIconFromShortcut(LPCWSTR pShortcut)
 {
+	DASSERT(pShortcut && pShortcut[0]);
 	bool bUseTargetExe = true;
 
 	wstring targetExe;
@@ -234,89 +240,90 @@ HICON getIconFromShortcut(LPCWSTR pShortcut)
 			ErrorExit(GetLastError());
 		}
 	}
-	return sfi.hIcon;
+	return CHIcon(sfi.hIcon);
 
 }
 
-HBITMAP createTransparentBitmap(HBITMAP hbmMask, HBITMAP hbmColor)
-{
-	BITMAP bm;
-	if (0 == GetObject(hbmColor, sizeof(BITMAP), &bm))
-		ErrorExit(GetLastError());
-	{
-		BITMAP bmT;
-		if (0 == GetObject(hbmMask, sizeof(bmT), &bmT))
-			ErrorExit(GetLastError());
-		if (bm.bmWidth != bmT.bmWidth || bm.bmHeight != bmT.bmHeight)
-			ErrorExit(L"Not same size");
-	}
-	HDC hDc= GetDC(NULL);
-	HDC hDcCompatMask = CreateCompatibleDC(hDc);
-	if (!hDcCompatMask)
-		ErrorExit(GetLastError());
-	// CreateCompatibleBitmap(hDcCompatMask, bm.bmWidth, bm.bmHeight);
-	HGDIOBJ oldMask = SelectObject(hDcCompatMask, hbmMask);
+//HBITMAP createTransparentBitmap(HBITMAP hbmMask, HBITMAP hbmColor)
+//{
+//	BITMAP bm;
+//	if (0 == GetObject(hbmColor, sizeof(BITMAP), &bm))
+//		ErrorExit(GetLastError());
+//	{
+//		BITMAP bmT;
+//		if (0 == GetObject(hbmMask, sizeof(bmT), &bmT))
+//			ErrorExit(GetLastError());
+//		if (bm.bmWidth != bmT.bmWidth || bm.bmHeight != bmT.bmHeight)
+//			ErrorExit(L"Not same size");
+//	}
+//	HDC hDc= GetDC(NULL);
+//	HDC hDcCompatMask = CreateCompatibleDC(hDc);
+//	if (!hDcCompatMask)
+//		ErrorExit(GetLastError());
+//	// CreateCompatibleBitmap(hDcCompatMask, bm.bmWidth, bm.bmHeight);
+//	HGDIOBJ oldMask = SelectObject(hDcCompatMask, hbmMask);
+//
+//	HDC hDcCompatColor = CreateCompatibleDC(hDc);
+//	if (!hDcCompatColor)
+//		ErrorExit(GetLastError());
+//	HGDIOBJ oldColor = SelectObject(hDcCompatColor, hbmColor);
+//
+//	//if (!BitBlt(
+//	//	hDcCompatMask,
+//	//	0, 0,
+//	//	bm.bmWidth, bm.bmHeight,
+//
+//	//	hDcCompatColor,
+//	//	0, 0,
+//
+//	//	SRCCOPY))// INVERT))
+//	//{
+//	//	ErrorExit(GetLastError());
+//	//}
+//
+//
+//	SelectObject(hDcCompatMask, oldMask);
+//	SelectObject(hDcCompatColor, oldColor);
+//	DeleteDC(hDcCompatMask);
+//	DeleteDC(hDcCompatColor);
+//	return hbmMask;
+//}
 
-	HDC hDcCompatColor = CreateCompatibleDC(hDc);
-	if (!hDcCompatColor)
-		ErrorExit(GetLastError());
-	HGDIOBJ oldColor = SelectObject(hDcCompatColor, hbmColor);
+//HBITMAP createTransparentBitmap2(HBITMAP hbmMask, HBITMAP hbmColor)
+//{
+//	BITMAP bmp;
+//	GetObject(hbmMask, sizeof(bmp), &bmp);
+//	HDC hMemDCMask = CreateCompatibleDC(NULL);
+//	HGDIOBJ hOldMask = SelectObject(hMemDCMask, hbmMask);
+//	HDC hMemDC = CreateCompatibleDC(NULL);
+//	HGDIOBJ hOld = SelectObject(hMemDC, hbmColor);
+//
+//	COLORREF crTrans = GetPixel(hMemDCMask, 0, 0);
+//	TransparentBlt(
+//		hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight,
+//		hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight,
+//		crTrans);
+//	SelectObject(hMemDCMask, hOldMask);
+//	SelectObject(hMemDC, hOld);
+//	//DeleteObject(hbmMask);
+//	//DeleteObject(hbmColor);
+//	//DeleteObject(hMemDC);
+//	
+//	return hbmMask;
+//}
+//HBITMAP getMenuBitmap(HICON hIcon)
+//{
+//	{
+//		ICONINFO ii;
+//		if (!GetIconInfo(hIcon, &ii))
+//			ErrorExit(GetLastError());
+//		// return (iconInfo.hbmColor);
+//		// return createTransparentBitmap2(ii.hbmMask, ii.hbmColor);
+//		// return MakeBitMapTransparent2(ii.hbmMask, ii.hbmColor);
+//		return MakeBitMapTransparent(ii.hbmColor);
+//	}
+//}
 
-	//if (!BitBlt(
-	//	hDcCompatMask,
-	//	0, 0,
-	//	bm.bmWidth, bm.bmHeight,
-
-	//	hDcCompatColor,
-	//	0, 0,
-
-	//	SRCCOPY))// INVERT))
-	//{
-	//	ErrorExit(GetLastError());
-	//}
-
-
-	SelectObject(hDcCompatMask, oldMask);
-	SelectObject(hDcCompatColor, oldColor);
-	DeleteDC(hDcCompatMask);
-	DeleteDC(hDcCompatColor);
-	return hbmMask;
-}
-
-HBITMAP createTransparentBitmap2(HBITMAP hbmMask, HBITMAP hbmColor)
-{
-	BITMAP bmp;
-	GetObject(hbmMask, sizeof(bmp), &bmp);
-	HDC hMemDCMask = CreateCompatibleDC(NULL);
-	HGDIOBJ hOldMask = SelectObject(hMemDCMask, hbmMask);
-	HDC hMemDC = CreateCompatibleDC(NULL);
-	HGDIOBJ hOld = SelectObject(hMemDC, hbmColor);
-
-	COLORREF crTrans = GetPixel(hMemDCMask, 0, 0);
-	TransparentBlt(
-		hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight,
-		hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight,
-		crTrans);
-	SelectObject(hMemDCMask, hOldMask);
-	SelectObject(hMemDC, hOld);
-	//DeleteObject(hbmMask);
-	//DeleteObject(hbmColor);
-	//DeleteObject(hMemDC);
-	
-	return hbmMask;
-}
-HBITMAP getMenuBitmap(HICON hIcon)
-{
-	{
-		ICONINFO ii;
-		if (!GetIconInfo(hIcon, &ii))
-			ErrorExit(GetLastError());
-		// return (iconInfo.hbmColor);
-		// return createTransparentBitmap2(ii.hbmMask, ii.hbmColor);
-		// return MakeBitMapTransparent2(ii.hbmMask, ii.hbmColor);
-		return MakeBitMapTransparent(ii.hbmColor);
-	}
-}
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -335,8 +342,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			MEASUREITEMSTRUCT* mis = (MEASUREITEMSTRUCT*)lParam;
 			GetMenuString(ghPopup, mis->itemID, szT, _countof(szT), MF_BYCOMMAND);
+			CHDC dc(GetDC(hWnd));
+			HFONT old = (HFONT)SelectObject(dc, gMenuFont);
+			SIZE size;
+			if (!GetTextExtentPoint32(dc, szT, lstrlen(szT), &size))
+				ErrorExit(GetLastError());
 			mis->itemHeight = gItemHeight;
-			mis->itemWidth = 128;
+			mis->itemWidth = gIconWidth + gItemDeltaX + size.cx;
+			SelectObject(dc, old);
 			return TRUE;
 		}
 		break;
@@ -365,15 +378,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					SelectObject(dis->hDC, old);
 				}
 			}
-			HICON hIcon = getIconFromShortcut(gCmdMap[dis->itemID].c_str());
+			CHIcon icon = getIconFromShortcut(gCmdMap[dis->itemID].c_str());
 			if (!DrawIconEx(dis->hDC, 
 				dis->rcItem.left, dis->rcItem.top + gItemDeltaY,
-				hIcon, 16, 16, 0, 0, DI_MASK | DI_IMAGE))
+				icon, 
+				gIconWidth, gIconHeight,
+				0, 0, DI_MASK | DI_IMAGE))
 				ErrorExit(GetLastError());
 
 			RECT rS = dis->rcItem;
 			rS.top += gItemDeltaY;
-			rS.left += 16 + 4;
+			rS.left += gIconWidth + gItemDeltaX;
 			GetMenuString(ghPopup, dis->itemID, szT, _countof(szT), MF_BYCOMMAND);
 			DrawText(dis->hDC, szT, lstrlen(szT), &rS, 0);
 
@@ -476,7 +491,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
 	ghInst = hInstance;
 #ifndef NDEBUG
-	gsw = new wstop_watch();
+	gsw = make_unique<wstop_watch>();
 #endif
 	InitHighDPISupport();
 	CCommandLineParser parser(I18N(L"Show QuickLaunch Menus"), APPNAME);
@@ -567,6 +582,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		OpenCommon(wnd, qlRoot.c_str());
 		return 0;
 	}
+
+	constexpr int heihtDelta = 2;
+	gIconWidth = GetSystemMetrics(SM_CXSMICON);
+	gIconHeight = GetSystemMetrics(SM_CYSMICON);
+	gItemHeight = gIconHeight + (2 * heihtDelta);
+	gItemDeltaX = 4;
+	gItemDeltaY = heihtDelta;
+
+	NONCLIENTMETRICS ncm = { 0 };
+	ncm.cbSize = sizeof(ncm);
+	if (!SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0))
+		ErrorExit(GetLastError());
+	gMenuFont = CreateFontIndirect(&ncm.lfMenuFont);
+
 	ghPopup = CreatePopupMenu();
 	gPopupMap[ghPopup] = wstring();
 	InsertMenu(ghPopup, 0, MF_BYCOMMAND, MENUID_DUMMY, L"<DUMMY>");
