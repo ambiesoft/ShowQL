@@ -1,3 +1,6 @@
+2021/10/19 v1.0.10
+Show icon on popup menu
+
 2021/10/17 v1.0.9
 Set proper menu size
 

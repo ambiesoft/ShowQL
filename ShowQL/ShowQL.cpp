@@ -40,7 +40,8 @@ CHFont gMenuFont;
 enum {
 	MENUID_DUMMY = 1,
 	MENUID_NOITEM,
-	MENUID_START
+	MENUID_START,
+	MENUID_END = 65535,
 };
 HINSTANCE ghInst;
 WORD gMenuIndex;
@@ -48,6 +49,7 @@ map<UINT, wstring> gCmdMap;
 map<HMENU, wstring> gPopupMap;
 wstring qlRoot;
 bool gbNoIcon = false;
+bool gbShowHidden = false;
 int gIconWidth, gIconHeight;
 UINT gItemHeight;
 UINT gItemDeltaY;
@@ -212,7 +214,7 @@ void ErrorExit(DWORD le)
 //	return hbmNew;// return our transformed bitmap.
 //}
 
-CHIcon getIconFromShortcut(LPCWSTR pShortcut)
+CHIcon getIconFromPath(LPCWSTR pShortcut)
 {
 	DASSERT(pShortcut && pShortcut[0]);
 	bool bUseTargetExe = true;
@@ -243,7 +245,6 @@ CHIcon getIconFromShortcut(LPCWSTR pShortcut)
 	return CHIcon(sfi.hIcon);
 
 }
-
 //HBITMAP createTransparentBitmap(HBITMAP hbmMask, HBITMAP hbmColor)
 //{
 //	BITMAP bm;
@@ -360,7 +361,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			DTRACE(stdFormat(L"DrawAction=%d", dis->itemAction));
 			if (dis->itemAction == ODA_SELECT)
 			{
-				
 				if (dis->itemState & ODS_SELECTED)
 				{
 					SetBkColor(dis->hDC, GetSysColor(COLOR_HIGHLIGHT));
@@ -378,18 +378,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					SelectObject(dis->hDC, old);
 				}
 			}
-			CHIcon icon = getIconFromShortcut(gCmdMap[dis->itemID].c_str());
-			if (!DrawIconEx(dis->hDC, 
+
+			if (!DrawIconEx(dis->hDC,
 				dis->rcItem.left, dis->rcItem.top + gItemDeltaY,
-				icon, 
+				(MENUID_END < dis->itemID) ?
+					getIconFromPath(gPopupMap[(HMENU)dis->itemID].c_str()):
+					getIconFromPath(gCmdMap[dis->itemID].c_str()),
 				gIconWidth, gIconHeight,
 				0, 0, DI_MASK | DI_IMAGE))
+			{
 				ErrorExit(GetLastError());
-
+			}
 			RECT rS = dis->rcItem;
 			rS.top += gItemDeltaY;
 			rS.left += gIconWidth + gItemDeltaX;
 			GetMenuString(ghPopup, dis->itemID, szT, _countof(szT), MF_BYCOMMAND);
+			DTRACE(stdFormat(L"DrawText=%s", szT));
 			DrawText(dis->hDC, szT, lstrlen(szT), &rS, 0);
 
 			return TRUE;
@@ -413,13 +417,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			TRACE_STOPWATCH(L"WM_INITMENUPOPUP GetFilesInfoW");
 			for (UINT i = 0; i < fi.GetCount(); ++i)
 			{
-				if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+				if (!gbShowHidden && (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
 					continue;
 				if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				{
 					HMENU hPopup = CreatePopupMenu();
 					InsertMenu(hPopup, 0, MF_BYCOMMAND, MENUID_DUMMY, L"<DUMMY>");
 					AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hPopup, fi[i].cFileName);
+					if (!gbNoIcon)
+					{
+						// Enable OwnerDraw
+						MENUITEMINFO mii;
+						ZeroMemory(&mii, sizeof(mii));
+						mii.cbSize = sizeof(mii);
+						mii.fMask = MIIM_TYPE;
+						if (!GetMenuItemInfo(hMenu, (UINT)hPopup, FALSE, &mii))
+							ErrorExit(GetLastError());
+						mii.cbSize = sizeof(mii);
+						mii.fMask = MIIM_TYPE;
+						mii.fType |= MFT_OWNERDRAW;
+						SetMenuItemInfo(hMenu, (UINT)hPopup, FALSE, &mii);
+					}
 					gPopupMap[hPopup] = stdCombinePath(qlDir, fi[i].cFileName);
 				}
 			}
@@ -427,7 +445,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 			for (UINT i = 0; i < fi.GetCount(); ++i)
 			{
-				if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+				if (!gbShowHidden && (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
 					continue;
 				if (!(fi[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 				{
@@ -511,6 +529,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	parser.AddOptionRange({ L"-ni",L"--no-icon" }, 0, &gbNoIcon, ArgEncodingFlags::ArgEncodingFlags_Default,
 		I18N(L"Shows no icons"));
 
+	parser.AddOptionRange({ L"-sh",L"--show-hidden" }, 0, &gbShowHidden, ArgEncodingFlags::ArgEncodingFlags_Default,
+		I18N(L"Shows hidden directories"));
+
+
 	COption mainArgs(L"",ArgCount::ArgCount_One, ArgEncodingFlags::ArgEncodingFlags_Default,
 		L"Directory to show in menu");
 	parser.AddOption(&mainArgs);
@@ -583,18 +605,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		return 0;
 	}
 
-	constexpr int heihtDelta = 2;
-	gIconWidth = GetSystemMetrics(SM_CXSMICON);
-	gIconHeight = GetSystemMetrics(SM_CYSMICON);
-	gItemHeight = gIconHeight + (2 * heihtDelta);
-	gItemDeltaX = 4;
-	gItemDeltaY = heihtDelta;
+	if (!gbNoIcon)
+	{
+		constexpr int heihtDelta = 2;
+		gIconWidth = GetSystemMetrics(SM_CXSMICON);
+		gIconHeight = GetSystemMetrics(SM_CYSMICON);
+		gItemHeight = gIconHeight + (2 * heihtDelta);
+		gItemDeltaX = 4;
+		gItemDeltaY = heihtDelta;
 
-	NONCLIENTMETRICS ncm = { 0 };
-	ncm.cbSize = sizeof(ncm);
-	if (!SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0))
-		ErrorExit(GetLastError());
-	gMenuFont = CreateFontIndirect(&ncm.lfMenuFont);
+		NONCLIENTMETRICS ncm = { 0 };
+		ncm.cbSize = sizeof(ncm);
+		if (!SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0))
+			ErrorExit(GetLastError());
+		gMenuFont = CreateFontIndirect(&ncm.lfMenuFont);
+	}
 
 	ghPopup = CreatePopupMenu();
 	gPopupMap[ghPopup] = wstring();
