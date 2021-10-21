@@ -383,7 +383,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (!DrawIconEx(dis->hDC,
 				dis->rcItem.left, dis->rcItem.top + gItemDeltaY,
 				(MENUID_END < dis->itemID) ?
-					getIconFromPath(gPopupMap[reinterpret_cast<HMENU>(dis->itemID)].c_str()):
+					getIconFromPath(gPopupMap[(HMENU)(UINT_PTR)dis->itemID].c_str()):
 					getIconFromPath(gCmdMap[dis->itemID].c_str()),
 				gIconWidth, gIconHeight,
 				0, 0, DI_MASK | DI_IMAGE))
@@ -511,6 +511,15 @@ wstring getMessageTitleString()
 		GetVersionString(nullptr, 3).c_str(),
 		Is64BitProcess() ? L"x64" : L"x86");
 }
+void OpenAndWait(HWND hWnd, LPCWSTR pShortcut)
+{
+	CKernelHandle processHandle;
+	if (OpenCommon(hWnd, pShortcut, NULL, NULL, &processHandle))
+	{
+		WaitForInputIdle(processHandle, WAIT_FOR_PROCESSIDLE);
+	}
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
 	_In_ LPWSTR    lpCmdLine,
@@ -647,16 +656,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	TRACE_STOPWATCH(L"After TrackPopup");
 	if (gCmdMap.find(cmd) != gCmdMap.end())
 	{
-		wstring shortcut = gCmdMap[cmd];
-		CKernelHandle processHandle;
-		if (OpenCommon(wnd, shortcut.c_str(), NULL, NULL, &processHandle))
-		{
-			WaitForInputIdle(processHandle, WAIT_FOR_PROCESSIDLE);
-		}
+		OpenAndWait(wnd, gCmdMap[cmd].c_str());
 	}
 	else if (cmd == MENUID_OPTIONS)
 	{
-		MessageBox(NULL, L"Not Implemented", NULL, 0);
+		wstring appOption = stdCombinePath(
+			stdGetParentDirectory(stdGetModuleFileName()),
+			L"ShowQLOption.exe");
+		OpenAndWait(wnd, appOption.c_str());
 	}
 	return 0;
 }
