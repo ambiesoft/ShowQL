@@ -16,55 +16,58 @@
     <Filter Include="04 dists">
       <UniqueIdentifier>{192f4f09-c85f-4fa5-a915-a4e6b35e72c9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="01 Source Files\lsMisc">
+      <UniqueIdentifier>{92f494b7-fb3f-411c-b4b1-6d028a793877}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ShowQL.cpp">
       <Filter>01 Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lsMisc\CreateSimpleWindow.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lsMisc\GetLastErrorString.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lsMisc\stdosd\stdosd.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lsMisc\stdosd\stdosd_win.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lsMisc\GetFilesInfo.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lsMisc\OpenCommon.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lsMisc\DebugMacro.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lsMisc\CommandLineParser.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lsMisc\GetVersionString.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lsMisc\UrlEncode.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lsMisc\UTF16toUTF8.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lsMisc\HighDPI.cpp">
-      <Filter>01 Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lsMisc\Is64.cpp">
-      <Filter>01 Source Files</Filter>
+      <Filter>01 Source Files\lsMisc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lsMisc\CreateShortcutFile.cpp">
-      <Filter>01 Source Files</Filter>
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\CreateSimpleWindow.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\DebugMacro.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\GetFilesInfo.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\GetLastErrorString.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\GetVersionString.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\HighDPI.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\Is64.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\OpenCommon.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lsMisc\SHMoveFile.cpp">
-      <Filter>01 Source Files</Filter>
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\stdosd\stdosd.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\stdosd\stdosd_win.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\UrlEncode.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\UTF16toUTF8.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

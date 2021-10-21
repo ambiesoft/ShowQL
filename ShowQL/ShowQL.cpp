@@ -40,6 +40,7 @@ CHFont gMenuFont;
 enum {
 	MENUID_DUMMY = 1,
 	MENUID_NOITEM,
+	MENUID_OPTIONS,
 	MENUID_START,
 	MENUID_END = 65535,
 };
@@ -382,7 +383,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (!DrawIconEx(dis->hDC,
 				dis->rcItem.left, dis->rcItem.top + gItemDeltaY,
 				(MENUID_END < dis->itemID) ?
-					getIconFromPath(gPopupMap[(HMENU)dis->itemID].c_str()):
+					getIconFromPath(gPopupMap[reinterpret_cast<HMENU>(dis->itemID)].c_str()):
 					getIconFromPath(gCmdMap[dis->itemID].c_str()),
 				gIconWidth, gIconHeight,
 				0, 0, DI_MASK | DI_IMAGE))
@@ -407,9 +408,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			while (DeleteMenu(hMenu, 0, MF_BYPOSITION))
 				;
 
-			wstring sel = gPopupMap[hMenu];
+			const wstring sel = gPopupMap[hMenu];
+			const bool bTopPopup = sel.empty();
 			DTRACE(L"sel=" + sel);
-			wstring qlDir = sel.empty() ? qlRoot : sel;
+			wstring qlDir = bTopPopup ? qlRoot : sel;
 			DTRACE(L"qlDir=" + qlDir);
 			FILESINFOW fi;
 			if (!GetFilesInfoW(qlDir.c_str(), fi))
@@ -488,6 +490,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (0 == GetMenuItemCount(hMenu))
 			{
 				InsertMenu(hMenu, 0, MF_BYCOMMAND|MF_DISABLED, MENUID_NOITEM, L"<No Items>");
+			}
+			if (true && bTopPopup)
+			{
+				//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+				//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_BYCOMMAND, MENUID_OPTIONS, I18N(L"Options"));
+				AppendMenu(hMenu, 0, MF_SEPARATOR, 0);
+				InsertMenu(hMenu, GetMenuItemCount(hMenu), MF_BYPOSITION | MF_BYCOMMAND, MENUID_OPTIONS, I18N(L"Options"));
 			}
 		}
 		break;
@@ -644,6 +653,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		{
 			WaitForInputIdle(processHandle, WAIT_FOR_PROCESSIDLE);
 		}
+	}
+	else if (cmd == MENUID_OPTIONS)
+	{
+		MessageBox(NULL, L"Not Implemented", NULL, 0);
 	}
 	return 0;
 }
