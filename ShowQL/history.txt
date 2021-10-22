@@ -1,3 +1,6 @@
+2021/10/22 v1.0.12
+Change app icon again
+
 2021/10/22 v1.0.11
 Change app icon
 
