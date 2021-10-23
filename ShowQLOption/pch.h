@@ -9,5 +9,9 @@
 
 // add headers that you want to pre-compile here
 #include "framework.h"
+#include "../../lsMisc/SessionGlobalMemory/SessionGlobalMemory.h"
+#include "../../lsMisc/CHandle.h"
+
+using namespace Ambiesoft;
 
 #endif //PCH_H

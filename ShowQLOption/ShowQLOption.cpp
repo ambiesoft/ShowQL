@@ -3,6 +3,7 @@
 //
 
 #include "pch.h"
+
 #include "framework.h"
 #include "ShowQLOption.h"
 #include "ShowQLOptionDlg.h"
@@ -37,6 +38,22 @@ CShowQLOptionApp theApp;
 
 BOOL CShowQLOptionApp::InitInstance()
 {
+	CKernelHandle singleMutex;
+	{
+		singleMutex = CreateMutex(NULL, TRUE, _T("ShowQLOptionMutex"));
+		DWORD dwLastError = ::GetLastError();
+		if (dwLastError == ERROR_ALREADY_EXISTS)
+		{
+			HWND hExistingHwnd = GetSingleHWND();
+			if (hExistingHwnd)
+			{//already running
+				::SetForegroundWindow(hExistingHwnd);
+			}
+
+			return FALSE;
+		}
+	}
+
 	// InitCommonControlsEx() is required on Windows XP if an application
 	// manifest specifies use of ComCtl32.dll version 6 or later to enable
 	// visual styles.  Otherwise, any window creation will fail.

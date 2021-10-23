@@ -65,6 +65,7 @@ BEGIN_MESSAGE_MAP(CShowQLOptionDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -73,6 +74,8 @@ END_MESSAGE_MAP()
 BOOL CShowQLOptionDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+
+	theApp.SetSingleHWND(m_hWnd);
 
 	// Add "About..." menu item to system menu.
 
@@ -153,3 +156,14 @@ HCURSOR CShowQLOptionDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+
+
+
+void CShowQLOptionDlg::OnDestroy()
+{
+	theApp.ReleaseSingleHWND();
+
+	CDialogEx::OnDestroy();
+}

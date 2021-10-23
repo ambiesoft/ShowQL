@@ -27,6 +27,26 @@ public:
 // Implementation
 
 	DECLARE_MESSAGE_MAP()
+
+protected:
+	CSessionGlobalMemory<LONGLONG>* m_pSingleHandle = nullptr;
+public:
+	void SetSingleHWND(HWND h) {
+		ASSERT(!m_pSingleHandle);
+		ASSERT(h && ::IsWindow(h));
+		m_pSingleHandle = new CSessionGlobalMemory<LONGLONG>("ShowQLOptionSingleHWND");
+		*m_pSingleHandle = (LONGLONG)h;
+	}
+	void ReleaseSingleHWND() {
+		ASSERT(m_pSingleHandle);
+		delete m_pSingleHandle;
+		m_pSingleHandle = NULL;
+	}
+	HWND GetSingleHWND() {
+		ASSERT(!m_pSingleHandle);
+		m_pSingleHandle = new CSessionGlobalMemory<LONGLONG>("ShowQLOptionSingleHWND");
+		return (HWND)(LONGLONG)*m_pSingleHandle;
+	}
 };
 
 extern CShowQLOptionApp theApp;

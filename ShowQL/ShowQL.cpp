@@ -325,7 +325,20 @@ CHIcon getIconFromPath(LPCWSTR pShortcut)
 //		return MakeBitMapTransparent(ii.hbmColor);
 //	}
 //}
-
+void makeOwnerDraw(HMENU hMenu, UINT cmd)
+{
+	MENUITEMINFO mii;
+	ZeroMemory(&mii, sizeof(mii));
+	mii.cbSize = sizeof(mii);
+	mii.fMask = MIIM_TYPE;
+	if (!GetMenuItemInfo(hMenu, cmd, FALSE, &mii))
+		ErrorExit(GetLastError());
+	mii.cbSize = sizeof(mii);
+	mii.fMask = MIIM_TYPE;
+	mii.fType |= MFT_OWNERDRAW;
+	if (!SetMenuItemInfo(hMenu, cmd, FALSE, &mii))
+		ErrorExit(GetLastError());
+}
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -428,17 +441,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hPopup, fi[i].cFileName);
 					if (!gbNoIcon)
 					{
-						// Enable OwnerDraw
-						MENUITEMINFO mii;
-						ZeroMemory(&mii, sizeof(mii));
-						mii.cbSize = sizeof(mii);
-						mii.fMask = MIIM_TYPE;
-						if (!GetMenuItemInfo(hMenu, (UINT)hPopup, FALSE, &mii))
-							ErrorExit(GetLastError());
-						mii.cbSize = sizeof(mii);
-						mii.fMask = MIIM_TYPE;
-						mii.fType |= MFT_OWNERDRAW;
-						SetMenuItemInfo(hMenu, (UINT)hPopup, FALSE, &mii);
+						makeOwnerDraw(hMenu, (UINT)(UINT_PTR)hPopup);
 					}
 					gPopupMap[hPopup] = stdCombinePath(qlDir, fi[i].cFileName);
 				}
@@ -458,32 +461,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 					if (!gbNoIcon)
 					{
-						// Enable OwnerDraw
-						MENUITEMINFO mii;
-						ZeroMemory(&mii, sizeof(mii));
-						mii.cbSize = sizeof(mii);
-						mii.fMask = MIIM_TYPE;
-						GetMenuItemInfo(hMenu, cmd, FALSE, &mii);
-						mii.cbSize = sizeof(mii);
-						mii.fMask = MIIM_TYPE;
-						mii.fType |= MFT_OWNERDRAW;
-						SetMenuItemInfo(hMenu, cmd, FALSE, &mii);
+						makeOwnerDraw(hMenu, cmd);
 					}
 
 					const wstring full = stdCombinePath(qlDir, fi[i].cFileName);
-					if (!gbNoIcon)
-					{
-						//HICON hIcon = getIconFromShortcut(full.c_str());
-						//TRACE_STOPWATCH(L"WM_INITMENUPOPUP SHGetFileInfo");
-						//HBITMAP hBitmap = getMenuBitmap(hIcon);
-						//MENUITEMINFO mii;
-						//mii.cbSize = sizeof(mii);
-						//mii.fMask = MIIM_BITMAP;
-						//mii.hbmpItem = hBitmap;
-						//if (!SetMenuItemInfo(hMenu, cmd, FALSE, &mii))
-						//	ErrorExit(GetLastError());
-						//TRACE_STOPWATCH(L"WM_INITMENUPOPUP SetMenuItemInfo");
-					}
 					gCmdMap[cmd] = full;
 				}
 			}
@@ -654,16 +635,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		wnd,
 		NULL);
 	TRACE_STOPWATCH(L"After TrackPopup");
-	if (gCmdMap.find(cmd) != gCmdMap.end())
-	{
-		OpenAndWait(wnd, gCmdMap[cmd].c_str());
-	}
+	if(false)
+	{ }
 	else if (cmd == MENUID_OPTIONS)
 	{
 		wstring appOption = stdCombinePath(
 			stdGetParentDirectory(stdGetModuleFileName()),
 			L"ShowQLOption.exe");
 		OpenAndWait(wnd, appOption.c_str());
+	}
+	else if (gCmdMap.find(cmd) != gCmdMap.end())
+	{
+		OpenAndWait(wnd, gCmdMap[cmd].c_str());
 	}
 	return 0;
 }
