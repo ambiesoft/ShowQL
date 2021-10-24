@@ -3,62 +3,36 @@
 //
 
 #include "pch.h"
+
+
 #include "framework.h"
 #include "ShowQLOption.h"
 #include "ShowQLOptionDlg.h"
+#include "About.h"
 #include "afxdialogex.h"
+
+#include "../common/common.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-
-// CAboutDlg dialog used for App About
-
-class CAboutDlg : public CDialogEx
-{
-public:
-	CAboutDlg();
-
-// Dialog Data
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_ABOUTBOX };
-#endif
-
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-// Implementation
-protected:
-	DECLARE_MESSAGE_MAP()
-};
-
-CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
-{
-}
-
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialogEx::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
-END_MESSAGE_MAP()
-
-
-// CShowQLOptionDlg dialog
-
-
+using namespace Ambiesoft::stdosd;
 
 CShowQLOptionDlg::CShowQLOptionDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_SHOWQLOPTION_DIALOG, pParent)
+	, m_bShowHidden(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
+	Profile::CHashIni ini(Profile::ReadAll(GetIniPath()));
+	Profile::GetInt(SECTION_OPTION, KEY_SHOW_HIDDEN, FALSE, m_bShowHidden, ini);
 }
 
 void CShowQLOptionDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Check(pDX, IDC_CHECK_SHOWHIDDEN, m_bShowHidden);
 }
 
 BEGIN_MESSAGE_MAP(CShowQLOptionDlg, CDialogEx)
@@ -66,6 +40,7 @@ BEGIN_MESSAGE_MAP(CShowQLOptionDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_DESTROY()
+	ON_BN_CLICKED(IDOK, &CShowQLOptionDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 
@@ -102,7 +77,7 @@ BOOL CShowQLOptionDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
-	// TODO: Add extra initialization here
+	SetWindowText(L"Option - ShowQL");
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -156,14 +131,25 @@ HCURSOR CShowQLOptionDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-
-
-
-
-
 void CShowQLOptionDlg::OnDestroy()
 {
+
 	theApp.ReleaseSingleHWND();
 
 	CDialogEx::OnDestroy();
+}
+
+
+void CShowQLOptionDlg::OnBnClickedOk()
+{
+	CDialogEx::OnOK();
+
+	Profile::CHashIni ini(Profile::ReadAll(GetIniPath()));
+	bool ok = true;
+	ok &= Profile::WriteInt(SECTION_OPTION, KEY_SHOW_HIDDEN, m_bShowHidden, ini);
+	ok &= Profile::WriteAll(ini, GetIniPath());
+	if (!ok)
+	{
+		AfxMessageBox(I18N(L"Failed to save ini."));
+	}
 }

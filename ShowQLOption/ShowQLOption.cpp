@@ -13,7 +13,7 @@
 #define new DEBUG_NEW
 #endif
 
-using namespace Ambiesoft;
+using namespace Ambiesoft::stdosd;
 
 // CShowQLOptionApp
 
@@ -135,3 +135,4 @@ CString CShowQLOptionApp::getSessionMutexString() const
 		Is64BitProcess() ? 64 : 32);
 	return ret;
 }
+

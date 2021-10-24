@@ -18,6 +18,9 @@
 #include "../../lsMisc/Is64.h"
 #include "../../lsMisc/CreateShortcutFile.h"
 #include "../../lsMisc/stdosd/stdosd.h"
+#include "../../profile/cpp/Profile/include/ambiesoft.profile.h"
+
+#include "../common/common.h"
 
 #include "gitrev.h"
 
@@ -55,11 +58,33 @@ int gIconWidth, gIconHeight;
 UINT gItemHeight;
 UINT gItemDeltaY;
 UINT gItemDeltaX;
+
+
+
 #ifndef NDEBUG
+
+#define DEBUG_DRAW
+//#define DEBUG_INITPOPUP
+
 unique_ptr<wstop_watch> gsw;
 #define TRACE_STOPWATCH(S) do { OutputDebugString(S);OutputDebugString(L" "); OutputDebugString(gsw->lookDiff().c_str()); OutputDebugString(L"\r\n"); }while(false)
+
+#ifdef DEBUG_DRAW
+	#define DTRACE_DRAW(s) DTRACE(s)
+#else
+	#define DTRACE_DRAW(s) do{}while(false)
+#endif
+
+#ifdef DEBUG_INITPOPUP
+	#define DTRACE_INITPOPUP(s) DTRACE(s)
+#else
+	#define DTRACE_INITPOPUP(s) do{}while(false)
+#endif
+
 #else
 #define TRACE_STOPWATCH(S) do{}while(false)
+#define DTRACE_DRAW(s) do{}while(false)
+#define DTRACE_INITPOPUP(s) do{}while(false)
 #endif
 
 void ErrorExit(const wchar_t* pMessage, int ret = -1)
@@ -78,142 +103,6 @@ void ErrorExit(DWORD le)
 {
 	ErrorExit(GetLastErrorString(le).c_str(), le);
 }
-
-//wstring GetSelectedMenuString()
-//{
-//	wstring ret;
-//	// if (hMenu != ghPopup)
-//	{
-//		for (int i = 0; i < GetMenuItemCount(ghPopup); ++i)
-//		{
-//			MENUITEMINFO mii = { 0 };
-//			mii.cbSize = sizeof(mii);
-//			mii.fMask= MIIM_DATA
-//			GetMenuItemInfo(ghPopup, i, TRUE, &mii);
-//		}
-//	}
-//}
-
-//
-//HBITMAP IconToAlphaBitmap(HICON ico)
-//{
-//	ICONINFO ii;
-//	GetIconInfo(ico, &ii);
-//	HBITMAP bmp = (ii.hbmColor);
-//	DeleteObject(ii.hbmColor);
-//	DeleteObject(ii.hbmMask);
-//
-//	if (Bitmap.GetPixelFormatSize(bmp.PixelFormat) < 32)
-//		return ico.ToBitmap();
-//
-//	BitmapData bmData;
-//	Rectangle bmBounds = new Rectangle(0, 0, bmp.Width, bmp.Height);
-//
-//	bmData = bmp.LockBits(bmBounds, ImageLockMode.ReadOnly, bmp.PixelFormat);
-//
-//	Bitmap dstBitmap = new Bitmap(bmData.Width, bmData.Height, bmData.Stride, PixelFormat.Format32bppArgb, bmData.Scan0);
-//
-//	bool IsAlphaBitmap = false;
-//
-//	for (int y = 0; y <= bmData.Height - 1; y++)
-//	{
-//		for (int x = 0; x <= bmData.Width - 1; x++)
-//		{
-//			Color PixelColor = Color.FromArgb(Marshal.ReadInt32(bmData.Scan0, (bmData.Stride * y) + (4 * x)));
-//			if (PixelColor.A > 0 & PixelColor.A < 255)
-//			{
-//				IsAlphaBitmap = true;
-//				break;
-//			}
-//		}
-//		if (IsAlphaBitmap) break;
-//	}
-//
-//	bmp.UnlockBits(bmData);
-//
-//	if (IsAlphaBitmap == true)
-//		return new Bitmap(dstBitmap);
-//	else
-//		return new Bitmap(ico.ToBitmap());
-//
-//}
-
-//HBITMAP MakeBitMapTransparent(HBITMAP hbmSrc)
-//{
-//	HDC hdcSrc, hdcDst;
-//	HBITMAP hbmOld = nullptr;
-//	HBITMAP hbmNew = nullptr;
-//	BITMAP bm;
-//	COLORREF clrTP, clrBK;
-//
-//	if ((hdcSrc = CreateCompatibleDC(NULL)) != NULL) {
-//		if ((hdcDst = CreateCompatibleDC(NULL)) != NULL) {
-//			int nRow, nCol;
-//			GetObject(hbmSrc, sizeof(bm), &bm);
-//			hbmOld = (HBITMAP)SelectObject(hdcSrc, hbmSrc);
-//			hbmNew = CreateBitmap(bm.bmWidth, bm.bmHeight, bm.bmPlanes, bm.bmBitsPixel, NULL);
-//			SelectObject(hdcDst, hbmNew);
-//
-//			BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCCOPY);
-//
-//			clrTP = GetPixel(hdcDst, 0, 0);// Get color of first pixel at 0,0
-//			clrBK = GetSysColor(COLOR_MENU);// Get the current background color of the menu
-//
-//			for (nRow = 0; nRow < bm.bmHeight; nRow++)// work our way through all the pixels changing their color
-//				for (nCol = 0; nCol < bm.bmWidth; nCol++)// when we hit our set transparency color.
-//					if (GetPixel(hdcDst, nCol, nRow) == clrTP)
-//						SetPixel(hdcDst, nCol, nRow, clrBK);
-//
-//			DeleteDC(hdcDst);
-//		}
-//		DeleteDC(hdcSrc);
-//
-//	}
-//	return hbmNew;// return our transformed bitmap.
-//}
-//HBITMAP MakeBitMapTransparent2(HBITMAP hbmSrcMask, HBITMAP hbmSrcColor)
-//{
-//	HDC hdcSrc, hdcDst;
-//	HBITMAP hbmOld = nullptr;
-//	HBITMAP hbmNew = nullptr;
-//	BITMAP bm;
-////	COLORREF clrTP, clrBK;
-//
-//	if ((hdcSrc = CreateCompatibleDC(NULL)) != NULL) {
-//		if ((hdcDst = CreateCompatibleDC(NULL)) != NULL) {
-//			//int nRow, nCol;
-//			GetObject(hbmSrcColor, sizeof(bm), &bm);
-//
-//			hbmOld = (HBITMAP)SelectObject(hdcSrc, hbmSrcColor);
-//			hbmNew = CreateBitmap(bm.bmWidth, bm.bmHeight, bm.bmPlanes, bm.bmBitsPixel, NULL);
-//			SelectObject(hdcDst, hbmNew);
-//
-//			BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCCOPY);
-//
-//			SelectObject(hdcSrc, hbmSrcMask);
-//			// BitBlt(hdcDst, 0, 0, bm.bmWidth, bm.bmHeight, hdcSrc, 0, 0, SRCINVERT);
-//
-//			COLORREF crTrans = GetPixel(hdcSrc, 0, 0);
-//			TransparentBlt(
-//				hdcDst, 0, 0, bm.bmWidth, bm.bmHeight,
-//				hdcSrc, 0, 0, bm.bmWidth, bm.bmHeight,
-//				crTrans);
-//
-//			//clrTP = GetPixel(hdcDst, 0, 0);// Get color of first pixel at 0,0
-//			//clrBK = GetSysColor(COLOR_MENU);// Get the current background color of the menu
-//
-//			//for (nRow = 0; nRow < bm.bmHeight; nRow++)// work our way through all the pixels changing their color
-//			//	for (nCol = 0; nCol < bm.bmWidth; nCol++)// when we hit our set transparency color.
-//			//		if (GetPixel(hdcDst, nCol, nRow) == clrTP)
-//			//			SetPixel(hdcDst, nCol, nRow, clrBK);
-//
-//			DeleteDC(hdcDst);
-//		}
-//		DeleteDC(hdcSrc);
-//
-//	}
-//	return hbmNew;// return our transformed bitmap.
-//}
 
 CHIcon getIconFromPath(LPCWSTR pShortcut)
 {
@@ -246,85 +135,6 @@ CHIcon getIconFromPath(LPCWSTR pShortcut)
 	return CHIcon(sfi.hIcon);
 
 }
-//HBITMAP createTransparentBitmap(HBITMAP hbmMask, HBITMAP hbmColor)
-//{
-//	BITMAP bm;
-//	if (0 == GetObject(hbmColor, sizeof(BITMAP), &bm))
-//		ErrorExit(GetLastError());
-//	{
-//		BITMAP bmT;
-//		if (0 == GetObject(hbmMask, sizeof(bmT), &bmT))
-//			ErrorExit(GetLastError());
-//		if (bm.bmWidth != bmT.bmWidth || bm.bmHeight != bmT.bmHeight)
-//			ErrorExit(L"Not same size");
-//	}
-//	HDC hDc= GetDC(NULL);
-//	HDC hDcCompatMask = CreateCompatibleDC(hDc);
-//	if (!hDcCompatMask)
-//		ErrorExit(GetLastError());
-//	// CreateCompatibleBitmap(hDcCompatMask, bm.bmWidth, bm.bmHeight);
-//	HGDIOBJ oldMask = SelectObject(hDcCompatMask, hbmMask);
-//
-//	HDC hDcCompatColor = CreateCompatibleDC(hDc);
-//	if (!hDcCompatColor)
-//		ErrorExit(GetLastError());
-//	HGDIOBJ oldColor = SelectObject(hDcCompatColor, hbmColor);
-//
-//	//if (!BitBlt(
-//	//	hDcCompatMask,
-//	//	0, 0,
-//	//	bm.bmWidth, bm.bmHeight,
-//
-//	//	hDcCompatColor,
-//	//	0, 0,
-//
-//	//	SRCCOPY))// INVERT))
-//	//{
-//	//	ErrorExit(GetLastError());
-//	//}
-//
-//
-//	SelectObject(hDcCompatMask, oldMask);
-//	SelectObject(hDcCompatColor, oldColor);
-//	DeleteDC(hDcCompatMask);
-//	DeleteDC(hDcCompatColor);
-//	return hbmMask;
-//}
-
-//HBITMAP createTransparentBitmap2(HBITMAP hbmMask, HBITMAP hbmColor)
-//{
-//	BITMAP bmp;
-//	GetObject(hbmMask, sizeof(bmp), &bmp);
-//	HDC hMemDCMask = CreateCompatibleDC(NULL);
-//	HGDIOBJ hOldMask = SelectObject(hMemDCMask, hbmMask);
-//	HDC hMemDC = CreateCompatibleDC(NULL);
-//	HGDIOBJ hOld = SelectObject(hMemDC, hbmColor);
-//
-//	COLORREF crTrans = GetPixel(hMemDCMask, 0, 0);
-//	TransparentBlt(
-//		hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight,
-//		hMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight,
-//		crTrans);
-//	SelectObject(hMemDCMask, hOldMask);
-//	SelectObject(hMemDC, hOld);
-//	//DeleteObject(hbmMask);
-//	//DeleteObject(hbmColor);
-//	//DeleteObject(hMemDC);
-//	
-//	return hbmMask;
-//}
-//HBITMAP getMenuBitmap(HICON hIcon)
-//{
-//	{
-//		ICONINFO ii;
-//		if (!GetIconInfo(hIcon, &ii))
-//			ErrorExit(GetLastError());
-//		// return (iconInfo.hbmColor);
-//		// return createTransparentBitmap2(ii.hbmMask, ii.hbmColor);
-//		// return MakeBitMapTransparent2(ii.hbmMask, ii.hbmColor);
-//		return MakeBitMapTransparent(ii.hbmColor);
-//	}
-//}
 void makeOwnerDraw(HMENU hMenu, UINT cmd)
 {
 	MENUITEMINFO mii;
@@ -337,6 +147,15 @@ void makeOwnerDraw(HMENU hMenu, UINT cmd)
 	mii.fMask = MIIM_TYPE;
 	mii.fType |= MFT_OWNERDRAW;
 	if (!SetMenuItemInfo(hMenu, cmd, FALSE, &mii))
+		ErrorExit(GetLastError());
+}
+void setMenuHidden(HMENU hMenu, UINT_PTR cmd)
+{
+	MENUITEMINFO mii = { 0 };
+	mii.cbSize = sizeof(mii);
+	mii.fMask = MIIM_DATA;
+	mii.dwItemData = 1;
+	if (!SetMenuItemInfo(hMenu, (UINT)cmd, FALSE, &mii))
 		ErrorExit(GetLastError());
 }
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -372,25 +191,66 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_DRAWITEM:
 		{
 			DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lParam;
-			DTRACE(stdFormat(L"DrawAction=%d", dis->itemAction));
-			if (dis->itemAction == ODA_SELECT)
+
+			//MENUITEMINFO mii = { 0 };
+			//mii.cbSize = sizeof(mii);
+			//mii.fMask = MIIM_DATA;
+			//if (!GetMenuItemInfo(ghPopup, dis->itemID, FALSE, &mii))
+			//	ErrorExit(GetLastError());
+			const bool bHidden = dis->itemData ? true : false;
+
+			DTRACE_DRAW(stdFormat(L"itemAction=%d, itemState=%d, hidden=%s",
+				dis->itemAction,
+				dis->itemState,
+				bHidden ? L"Hidden" : L"Normal"
+			));
+
+			// dis->itemAction
+			// ODA_DRAWENTIRE = 0x0001
+			//   The entire control needs to be drawn.
+			// ODA_FOCUS = 0x0004
+			//   The control has lost or gained the keyboard focus.The itemState member should be 
+			//   checked to determine whether the control has the focus.
+			// ODA_SELECT = 0x0002
+			//   The selection status has changed.The itemState member should be checked to determine 
+			//   the new selection state.
+
+			int colorMenuText = -1;
+			int colorMuenuTextBk = -1;
+			int colorBk = -1;
+			if (dis->itemAction == ODA_DRAWENTIRE)
+			{
+				colorMenuText = bHidden ? COLOR_GRAYTEXT : COLOR_MENUTEXT;
+			}
+			else if (dis->itemAction == ODA_SELECT)
 			{
 				if (dis->itemState & ODS_SELECTED)
 				{
-					SetBkColor(dis->hDC, GetSysColor(COLOR_HIGHLIGHT));
-					SetTextColor(dis->hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));// RGB(0xff, 0xff, 0xff));
-					HBRUSH brush = GetSysColorBrush(COLOR_MENUHILIGHT); //create brush
-					HBRUSH old =(HBRUSH) SelectObject(dis->hDC, brush);
-					FillRect(dis->hDC, &dis->rcItem, brush);
-					SelectObject(dis->hDC, old);
+					// newly selected
+					colorMuenuTextBk = COLOR_MENUHILIGHT;
+					colorMenuText = COLOR_HIGHLIGHTTEXT;
+					colorBk = COLOR_MENUHILIGHT;
 				}
 				else
 				{
-					HBRUSH brush = GetSysColorBrush(COLOR_MENU); //create brush
-					HBRUSH old = (HBRUSH)SelectObject(dis->hDC, brush);
-					FillRect(dis->hDC, &dis->rcItem, brush);
-					SelectObject(dis->hDC, old);
+					// deselected
+					colorMenuText = bHidden ? COLOR_GRAYTEXT : COLOR_MENUTEXT;
+					colorBk = COLOR_MENU;
 				}
+			}
+			else
+				assert(false);
+
+			assert(colorMenuText != -1);
+			SetTextColor(dis->hDC, GetSysColor(colorMenuText));
+			if (colorMuenuTextBk != -1)
+				SetBkColor(dis->hDC, GetSysColor(colorMuenuTextBk));
+			if (colorBk != -1)
+			{
+				HBRUSH brush = GetSysColorBrush(colorBk);
+				HBRUSH old = (HBRUSH)SelectObject(dis->hDC, brush);
+				FillRect(dis->hDC, &dis->rcItem, brush);
+				SelectObject(dis->hDC, old);
 			}
 
 			if (!DrawIconEx(dis->hDC,
@@ -407,7 +267,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			rS.top += gItemDeltaY;
 			rS.left += gIconWidth + gItemDeltaX;
 			GetMenuString(ghPopup, dis->itemID, szT, _countof(szT), MF_BYCOMMAND);
-			DTRACE(stdFormat(L"DrawText=%s", szT));
+			DTRACE_DRAW(stdFormat(L"DrawText=%s", szT));
 			DrawText(dis->hDC, szT, lstrlen(szT), &rS, 0);
 
 			return TRUE;
@@ -423,22 +283,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 			const wstring sel = gPopupMap[hMenu];
 			const bool bTopPopup = sel.empty();
-			DTRACE(L"sel=" + sel);
+			DTRACE_INITPOPUP(L"sel=" + sel);
 			wstring qlDir = bTopPopup ? qlRoot : sel;
-			DTRACE(L"qlDir=" + qlDir);
+			DTRACE_INITPOPUP(L"qlDir=" + qlDir);
 			FILESINFOW fi;
 			if (!GetFilesInfoW(qlDir.c_str(), fi))
 				ErrorExit(GetLastError());
 			TRACE_STOPWATCH(L"WM_INITMENUPOPUP GetFilesInfoW");
 			for (UINT i = 0; i < fi.GetCount(); ++i)
 			{
-				if (!gbShowHidden && (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
+				const bool bHidden = (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN);
+				if (!gbShowHidden && bHidden)
 					continue;
 				if (fi[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				{
+					DTRACE_INITPOPUP(stdFormat(L"WM_INITMENUPOPUP:DIR:") + fi[i].cFileName);
 					HMENU hPopup = CreatePopupMenu();
 					InsertMenu(hPopup, 0, MF_BYCOMMAND, MENUID_DUMMY, L"<DUMMY>");
-					AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hPopup, fi[i].cFileName);
+					AppendMenu(hMenu,
+						MF_POPUP,
+						(UINT_PTR)hPopup, fi[i].cFileName);
+					if (bHidden)
+						setMenuHidden(hMenu, (UINT_PTR)hPopup);
 					if (!gbNoIcon)
 					{
 						makeOwnerDraw(hMenu, (UINT)(UINT_PTR)hPopup);
@@ -450,15 +316,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 			for (UINT i = 0; i < fi.GetCount(); ++i)
 			{
-				if (!gbShowHidden && (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
+				const bool bHidden = (fi[i].dwFileAttributes & FILE_ATTRIBUTE_HIDDEN);
+				if (!gbShowHidden && bHidden)
 					continue;
 				if (!(fi[i].dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 				{
+					DTRACE_INITPOPUP(stdFormat(L"WM_INITMENUPOPUP:FILE:") + fi[i].cFileName);
 					TRACE_STOPWATCH(L"WM_INITMENUPOPUP process file");
 					UINT cmd = gMenuIndex++ + MENUID_START;
-					AppendMenu(hMenu, MF_BYCOMMAND, cmd,
+					AppendMenu(hMenu,
+						MF_BYCOMMAND,
+						cmd,
 						stdGetFileNameWitoutExtension(fi[i].cFileName).c_str());
-
+					if (bHidden)
+						setMenuHidden(hMenu, cmd);
 					if (!gbNoIcon)
 					{
 						makeOwnerDraw(hMenu, cmd);
@@ -472,10 +343,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				InsertMenu(hMenu, 0, MF_BYCOMMAND|MF_DISABLED, MENUID_NOITEM, L"<No Items>");
 			}
-			if (true && bTopPopup)
+			if (bTopPopup)
 			{
-				//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-				//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_BYCOMMAND, MENUID_OPTIONS, I18N(L"Options"));
 				AppendMenu(hMenu, 0, MF_SEPARATOR, 0);
 				InsertMenu(hMenu, GetMenuItemCount(hMenu), MF_BYPOSITION | MF_BYCOMMAND, MENUID_OPTIONS, I18N(L"Options"));
 			}
@@ -511,6 +380,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	gsw = make_unique<wstop_watch>();
 #endif
 	InitHighDPISupport();
+	
+	{
+		Profile::CHashIni ini(Profile::ReadAll(GetIniPath()));
+		Profile::GetBool(SECTION_OPTION, KEY_SHOW_HIDDEN, false, gbShowHidden, ini);
+	}
+
 	CCommandLineParser parser(I18N(L"Show QuickLaunch Menus"), APPNAME);
 
 	bool bVersion = false;
@@ -565,6 +440,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			MB_ICONINFORMATION);
 		return 0;
 	}
+
 
 	TRACE_STOPWATCH(L"Started");
 

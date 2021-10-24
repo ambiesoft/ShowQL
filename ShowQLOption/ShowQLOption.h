@@ -49,6 +49,7 @@ public:
 		m_pSingleHandle = new CSessionGlobalMemory<LONGLONG>(getSessionUniqueString());
 		return (HWND)(LONGLONG)*m_pSingleHandle;
 	}
+
 };
 
 extern CShowQLOptionApp theApp;

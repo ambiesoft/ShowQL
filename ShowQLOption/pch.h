@@ -8,9 +8,16 @@
 #define PCH_H
 
 // add headers that you want to pre-compile here
+#include <string>
+
 #include "framework.h"
 #include "../../lsMisc/SessionGlobalMemory/SessionGlobalMemory.h"
 #include "../../lsMisc/CHandle.h"
+#include "../../profile/cpp/Profile/include/ambiesoft.profile.h"
+#include "../../lsMisc/stdosd/stdosd.h"
+
+
+#define I18N(s) (s)
 
 using namespace Ambiesoft;
 

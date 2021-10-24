@@ -1,3 +1,6 @@
+2021/10/25 v1.0.13
+Draw hidden item properly
+
 2021/10/22 v1.0.12
 Change app icon again
 

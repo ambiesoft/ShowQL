@@ -33,4 +33,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnDestroy();
+	BOOL m_bShowHidden;
+	afx_msg void OnBnClickedOk();
 };
