@@ -30,11 +30,13 @@ public:
 
 protected:
 	CSessionGlobalMemory<LONGLONG>* m_pSingleHandle = nullptr;
+	CStringA getSessionUniqueString() const;
+	CString getSessionMutexString() const;
 public:
 	void SetSingleHWND(HWND h) {
 		ASSERT(!m_pSingleHandle);
 		ASSERT(h && ::IsWindow(h));
-		m_pSingleHandle = new CSessionGlobalMemory<LONGLONG>("ShowQLOptionSingleHWND");
+		m_pSingleHandle = new CSessionGlobalMemory<LONGLONG>(getSessionUniqueString());
 		*m_pSingleHandle = (LONGLONG)h;
 	}
 	void ReleaseSingleHWND() {
@@ -44,7 +46,7 @@ public:
 	}
 	HWND GetSingleHWND() {
 		ASSERT(!m_pSingleHandle);
-		m_pSingleHandle = new CSessionGlobalMemory<LONGLONG>("ShowQLOptionSingleHWND");
+		m_pSingleHandle = new CSessionGlobalMemory<LONGLONG>(getSessionUniqueString());
 		return (HWND)(LONGLONG)*m_pSingleHandle;
 	}
 };

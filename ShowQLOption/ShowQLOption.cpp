@@ -3,6 +3,7 @@
 //
 
 #include "pch.h"
+#include "../../lsMisc/Is64.h"
 
 #include "framework.h"
 #include "ShowQLOption.h"
@@ -12,6 +13,7 @@
 #define new DEBUG_NEW
 #endif
 
+using namespace Ambiesoft;
 
 // CShowQLOptionApp
 
@@ -40,7 +42,7 @@ BOOL CShowQLOptionApp::InitInstance()
 {
 	CKernelHandle singleMutex;
 	{
-		singleMutex = CreateMutex(NULL, TRUE, _T("ShowQLOptionMutex"));
+		singleMutex = CreateMutex(NULL, TRUE, getSessionMutexString());
 		DWORD dwLastError = ::GetLastError();
 		if (dwLastError == ERROR_ALREADY_EXISTS)
 		{
@@ -119,3 +121,17 @@ BOOL CShowQLOptionApp::InitInstance()
 	return FALSE;
 }
 
+CStringA CShowQLOptionApp::getSessionUniqueString() const 
+{
+	CStringA ret;
+	ret.Format("ShowQLOptionSingle%dHWND",
+		Is64BitProcess() ? 64 : 32);
+	return ret;
+}
+CString CShowQLOptionApp::getSessionMutexString() const 
+{
+	CString ret;
+	ret.Format(L"ShowQLOption%dMutex",
+		Is64BitProcess() ? 64 : 32);
+	return ret;
+}
