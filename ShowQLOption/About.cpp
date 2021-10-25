@@ -33,15 +33,20 @@ public:
 // Implementation
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+	CString m_strInfo;
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
+, m_strInfo(_T(""))
 {
+
 }
 
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_STATIC_INFO, m_strInfo);
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)

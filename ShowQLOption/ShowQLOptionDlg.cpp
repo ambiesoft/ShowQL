@@ -6,6 +6,8 @@
 
 
 #include "framework.h"
+
+
 #include "ShowQLOption.h"
 #include "ShowQLOptionDlg.h"
 #include "About.h"
@@ -22,17 +24,20 @@ using namespace Ambiesoft::stdosd;
 CShowQLOptionDlg::CShowQLOptionDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_SHOWQLOPTION_DIALOG, pParent)
 	, m_bShowHidden(FALSE)
+	, m_bNoIcons(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
 	Profile::CHashIni ini(Profile::ReadAll(GetIniPath()));
 	Profile::GetInt(SECTION_OPTION, KEY_SHOW_HIDDEN, FALSE, m_bShowHidden, ini);
+	Profile::GetInt(SECTION_OPTION, KEY_NO_ICON, FALSE, m_bNoIcons, ini);
 }
 
 void CShowQLOptionDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Check(pDX, IDC_CHECK_SHOWHIDDEN, m_bShowHidden);
+	DDX_Check(pDX, IDC_CHECK_NOICON, m_bNoIcons);
 }
 
 BEGIN_MESSAGE_MAP(CShowQLOptionDlg, CDialogEx)
@@ -41,6 +46,8 @@ BEGIN_MESSAGE_MAP(CShowQLOptionDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDOK, &CShowQLOptionDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_BUTTON_ABOUT, &CShowQLOptionDlg::OnBnClickedButtonAbout)
+	ON_BN_CLICKED(IDC_BUTTON_PINTOTASKBAR, &CShowQLOptionDlg::OnBnClickedButtonPintotaskbar)
 END_MESSAGE_MAP()
 
 
@@ -147,9 +154,27 @@ void CShowQLOptionDlg::OnBnClickedOk()
 	Profile::CHashIni ini(Profile::ReadAll(GetIniPath()));
 	bool ok = true;
 	ok &= Profile::WriteInt(SECTION_OPTION, KEY_SHOW_HIDDEN, m_bShowHidden, ini);
+	ok &= Profile::WriteInt(SECTION_OPTION, KEY_NO_ICON, m_bNoIcons, ini);
 	ok &= Profile::WriteAll(ini, GetIniPath());
 	if (!ok)
 	{
 		AfxMessageBox(I18N(L"Failed to save ini."));
 	}
+}
+
+
+void CShowQLOptionDlg::OnBnClickedButtonAbout()
+{
+	CAboutDlg dlgAbout;
+	dlgAbout.DoModal();
+}
+
+
+void CShowQLOptionDlg::OnBnClickedButtonPintotaskbar()
+{
+	OpenCommon(m_hWnd,
+		stdCombinePath(
+			stdGetParentDirectory(stdGetModuleFileName()),
+			L"ShowQL.exe").c_str(),
+		L"--pin-me");
 }

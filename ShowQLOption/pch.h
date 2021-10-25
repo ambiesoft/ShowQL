@@ -15,10 +15,11 @@
 #include "../../lsMisc/CHandle.h"
 #include "../../profile/cpp/Profile/include/ambiesoft.profile.h"
 #include "../../lsMisc/stdosd/stdosd.h"
-
+#include "../../lsMisc/OpenCommon.h"
 
 #define I18N(s) (s)
 
 using namespace Ambiesoft;
+using namespace Ambiesoft::stdosd;
 
 #endif //PCH_H

@@ -384,6 +384,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	{
 		Profile::CHashIni ini(Profile::ReadAll(GetIniPath()));
 		Profile::GetBool(SECTION_OPTION, KEY_SHOW_HIDDEN, false, gbShowHidden, ini);
+		Profile::GetBool(SECTION_OPTION, KEY_NO_ICON, false, gbNoIcon, ini);
 	}
 
 	CCommandLineParser parser(I18N(L"Show QuickLaunch Menus"), APPNAME);
@@ -399,6 +400,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	bool bExplorer = false;
 	parser.AddOptionRange({ L"-e",L"--explorer" }, 0, &bExplorer, ArgEncodingFlags::ArgEncodingFlags_Default,
 		I18N(L"Shows in Explorer (Press SHIFT in startup)"));
+
+	bool bPinMe = false;
+	parser.AddOptionRange({ L"-p",L"--pin-me" }, 0, &bPinMe, ArgEncodingFlags::ArgEncodingFlags_Default,
+		I18N(L"Shows MessageBox for pinning this app."));
 
 	parser.AddOptionRange({ L"-ni",L"--no-icon" }, 0, &gbNoIcon, ArgEncodingFlags::ArgEncodingFlags_Default,
 		I18N(L"Shows no icons"));
@@ -440,7 +445,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			MB_ICONINFORMATION);
 		return 0;
 	}
-
+	if (bPinMe)
+	{
+		MessageBox(nullptr,
+			I18N(L"Please pin this in the taskbar."),
+			getMessageTitleString().c_str(),
+			MB_ICONINFORMATION);
+		return 0;
+	}
 
 	TRACE_STOPWATCH(L"Started");
 
