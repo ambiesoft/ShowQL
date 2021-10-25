@@ -50,6 +50,11 @@ public:
 		return (HWND)(LONGLONG)*m_pSingleHandle;
 	}
 
+	std::wstring GetShowQLExe() const {
+		return stdCombinePath(
+			stdGetParentDirectory(stdGetModuleFileName()),
+			L"ShowQL.exe");
+	}
 };
 
 extern CShowQLOptionApp theApp;

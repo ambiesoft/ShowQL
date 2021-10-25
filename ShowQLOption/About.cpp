@@ -4,43 +4,26 @@
 
 #include "pch.h"
 #include "../../profile/cpp/Profile/include/ambiesoft.profile.h"
+#include "../../lsMisc/GetVersionString.h"
 
 #include "framework.h"
 #include "ShowQLOption.h"
 #include "ShowQLOptionDlg.h"
 #include "afxdialogex.h"
+#include "About.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 using namespace Ambiesoft;
-// CAboutDlg dialog used for App About
-
-class CAboutDlg : public CDialogEx
-{
-public:
-	CAboutDlg();
-
-// Dialog Data
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_ABOUTBOX };
-#endif
-
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-// Implementation
-protected:
-	DECLARE_MESSAGE_MAP()
-public:
-	CString m_strInfo;
-};
 
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
 , m_strInfo(_T(""))
 {
-
+	m_strInfo = stdFormat(L"%s v%s",
+		(LPCWSTR)AfxGetAppName(),
+		GetVersionString(theApp.GetShowQLExe().c_str(), 3).c_str()).c_str();
 }
 
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
@@ -53,3 +36,14 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
+
+
+BOOL CAboutDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	SetWindowText(stdFormat(I18N(L"About %s"), L"ShowQL").c_str());
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+				  // EXCEPTION: OCX Property Pages should return FALSE
+}

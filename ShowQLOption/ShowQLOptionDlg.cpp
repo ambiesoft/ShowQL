@@ -173,8 +173,6 @@ void CShowQLOptionDlg::OnBnClickedButtonAbout()
 void CShowQLOptionDlg::OnBnClickedButtonPintotaskbar()
 {
 	OpenCommon(m_hWnd,
-		stdCombinePath(
-			stdGetParentDirectory(stdGetModuleFileName()),
-			L"ShowQL.exe").c_str(),
+		theApp.GetShowQLExe().c_str(),
 		L"--pin-me");
 }
