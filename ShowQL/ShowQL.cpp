@@ -379,6 +379,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 #ifndef NDEBUG
 	gsw = make_unique<wstop_watch>();
 #endif
+
+	CKernelHandle singleMutex(CreateMutex(NULL, TRUE, L"ShowQLSingleInstance"));
+	if (!singleMutex)
+		ErrorExit(GetLastError());
+	DWORD dwLastError = ::GetLastError();
+	if (dwLastError == ERROR_ALREADY_EXISTS)
+	{
+		return -1;
+	}
+
 	InitHighDPISupport();
 	
 	{
