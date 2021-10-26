@@ -43,7 +43,10 @@
 		"ShowQLOption.pdb",
 		"history.txt",
 		"LICENSE",
-		"README.md"
+		"README.md",
+		"README-jpn.md",
+		"lang\\ShowQL.jpn.txt",
+		"lang\\ShowQLOption.jpn.txt"
     ],
     
     "ShouldBeOneOfThem": [],
