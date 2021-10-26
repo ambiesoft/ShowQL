@@ -1,114 +1,140 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
+    <Filter Include="01 Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
+    <Filter Include="02 Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="03 Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="05 lang">
+      <UniqueIdentifier>{4db96d32-081b-4953-a21e-e89df2c30e13}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShowQLOption.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ShowQLOptionDlg.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="framework.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Resource.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lsMisc\SessionGlobalMemory\SessionGlobalMemory.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lsMisc\CHandle.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lsMisc\Is64.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\profile\cpp\Profile\include\ambiesoft.profile.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="About.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lsMisc\stdosd\stdosd.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lsMisc\stdosd\stdosd_literal.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\common.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lsMisc\OpenCommon.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lsMisc\GetVersionString.h">
-      <Filter>Header Files</Filter>
+      <Filter>01 Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lsMisc\I18N.h">
+      <Filter>01 Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lsMisc\UrlEncode.h">
+      <Filter>01 Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lsMisc\UTF16toUTF8.h">
+      <Filter>01 Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ShowQLOption.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>02 Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ShowQLOptionDlg.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>02 Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>02 Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lsMisc\Is64.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>02 Source Files</Filter>
     </ClCompile>
     <ClCompile Include="About.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>02 Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lsMisc\stdosd\stdosd.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>02 Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lsMisc\stdosd\stdosd_win.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>02 Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\common\common.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>02 Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lsMisc\OpenCommon.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>02 Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lsMisc\GetVersionString.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>02 Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\I18N.cpp">
+      <Filter>02 Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\UrlEncode.cpp">
+      <Filter>02 Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\UTF16toUTF8.cpp">
+      <Filter>02 Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ShowQLOption.rc">
-      <Filter>Resource Files</Filter>
+      <Filter>03 Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ShowQLOption.rc2">
-      <Filter>Resource Files</Filter>
+      <Filter>03 Resource Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\ShowQLOption.ico">
-      <Filter>Resource Files</Filter>
+      <Filter>03 Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="lang\jpn.txt">
+      <Filter>05 lang</Filter>
+    </Text>
   </ItemGroup>
 </Project>

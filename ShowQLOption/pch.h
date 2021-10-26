@@ -9,6 +9,7 @@
 
 // add headers that you want to pre-compile here
 #include <string>
+#include <vector>
 
 #include "framework.h"
 #include "../../lsMisc/SessionGlobalMemory/SessionGlobalMemory.h"
@@ -16,8 +17,7 @@
 #include "../../profile/cpp/Profile/include/ambiesoft.profile.h"
 #include "../../lsMisc/stdosd/stdosd.h"
 #include "../../lsMisc/OpenCommon.h"
-
-#define I18N(s) (s)
+#include "../../lsMisc/I18N.h"
 
 using namespace Ambiesoft;
 using namespace Ambiesoft::stdosd;

@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "../../lsMisc/Is64.h"
+#include "../../lsMisc/I18N.h"
 
 #include "framework.h"
 #include "ShowQLOption.h"
@@ -40,6 +41,8 @@ CShowQLOptionApp theApp;
 
 BOOL CShowQLOptionApp::InitInstance()
 {
+	i18nInitLangmap(NULL, NULL, AfxGetAppName());
+
 	CKernelHandle singleMutex;
 	{
 		singleMutex = CreateMutex(NULL, TRUE, getSessionMutexString());

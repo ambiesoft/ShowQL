@@ -30,6 +30,8 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_STATIC_INFO, m_strInfo);
+	DDX_Control(pDX, IDC_STATIC_INFO, m_staticInfo);
+	DDX_Control(pDX, IDC_STATIC_COPYRIGHT, m_staticCopyRight);
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
@@ -42,6 +44,10 @@ BOOL CAboutDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
+	std::vector<HWND> excepts;
+	excepts.push_back(m_staticInfo);
+	excepts.push_back(m_staticCopyRight);
+	i18nChangeDialogText(m_hWnd, &excepts[0], (int)excepts.size());
 	SetWindowText(stdFormat(I18N(L"About %s"), L"ShowQL").c_str());
 
 	return TRUE;  // return TRUE unless you set the focus to a control

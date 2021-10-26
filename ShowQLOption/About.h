@@ -21,6 +21,8 @@ protected:
 public:
 	CString m_strInfo;
 	virtual BOOL OnInitDialog();
+	CStatic m_staticInfo;
+	CStatic m_staticCopyRight;
 };
 
 

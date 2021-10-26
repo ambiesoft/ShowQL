@@ -103,8 +103,13 @@
     </Link>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)README.md" "$(TargetDir)"
+copy "$(SolutionDir)README-jpn.md" "$(TargetDir)"
 copy "$(SolutionDir)LICENSE" "$(TargetDir)"
 copy "$(SolutionDir)showQl\history.txt" "$(TargetDir)"
+
+mkdir "$(TargetDir)lang\"
+copy "$(SolutionDir)showQl\lang\jpn.txt" "$(TargetDir)lang\ShowQL.jpn.txt"
+copy "$(SolutionDir)showQlOption\lang\jpn.txt" "$(TargetDir)lang\ShowQLOption.jpn.txt"
 
 del "$(TargetDir)zzzDist.*"</Command>
     </PostBuildEvent>
@@ -126,8 +131,13 @@ del "$(TargetDir)zzzDist.*"</Command>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)README.md" "$(TargetDir)"
+copy "$(SolutionDir)README-jpn.md" "$(TargetDir)"
 copy "$(SolutionDir)LICENSE" "$(TargetDir)"
 copy "$(SolutionDir)showQl\history.txt" "$(TargetDir)"
+
+mkdir "$(TargetDir)lang\"
+copy "$(SolutionDir)showQl\lang\jpn.txt" "$(TargetDir)lang\ShowQL.jpn.txt"
+copy "$(SolutionDir)showQlOption\lang\jpn.txt" "$(TargetDir)lang\ShowQLOption.jpn.txt"
 
 del "$(TargetDir)zzzDist.*"</Command>
     </PostBuildEvent>
@@ -145,8 +155,13 @@ del "$(TargetDir)zzzDist.*"</Command>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)README.md" "$(TargetDir)"
+copy "$(SolutionDir)README-jpn.md" "$(TargetDir)"
 copy "$(SolutionDir)LICENSE" "$(TargetDir)"
 copy "$(SolutionDir)showQl\history.txt" "$(TargetDir)"
+
+mkdir "$(TargetDir)lang\"
+copy "$(SolutionDir)showQl\lang\jpn.txt" "$(TargetDir)lang\ShowQL.jpn.txt"
+copy "$(SolutionDir)showQlOption\lang\jpn.txt" "$(TargetDir)lang\ShowQLOption.jpn.txt"
 
 del "$(TargetDir)zzzDist.*"</Command>
     </PostBuildEvent>
@@ -168,8 +183,13 @@ del "$(TargetDir)zzzDist.*"</Command>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)README.md" "$(TargetDir)"
+copy "$(SolutionDir)README-jpn.md" "$(TargetDir)"
 copy "$(SolutionDir)LICENSE" "$(TargetDir)"
 copy "$(SolutionDir)showQl\history.txt" "$(TargetDir)"
+
+mkdir "$(TargetDir)lang\"
+copy "$(SolutionDir)showQl\lang\jpn.txt" "$(TargetDir)lang\ShowQL.jpn.txt"
+copy "$(SolutionDir)showQlOption\lang\jpn.txt" "$(TargetDir)lang\ShowQLOption.jpn.txt"
 
 del "$(TargetDir)zzzDist.*"</Command>
     </PostBuildEvent>

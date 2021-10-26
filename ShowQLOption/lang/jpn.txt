@@ -1,0 +1,8 @@
+﻿"&About"="情報(&A)"
+"&Pin ShowQL"="ShowQLをピン(&P)"
+"Cancel"="キャンセル"
+"OK"="OK"
+"Show &hidden files and directories"="隠しファイルやディレクトウィを表示(&H)"
+"Show no &icons"="アイコンを表示しない(&I)"
+"About %s"="%sについて"
+"About ShowQL"="ShowQLについて"

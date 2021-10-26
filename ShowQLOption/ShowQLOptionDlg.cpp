@@ -59,7 +59,7 @@ BOOL CShowQLOptionDlg::OnInitDialog()
 
 	theApp.SetSingleHWND(m_hWnd);
 
-	// Add "About..." menu item to system menu.
+	i18nChangeDialogText(m_hWnd);
 
 	// IDM_ABOUTBOX must be in the system command range.
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
@@ -172,7 +172,13 @@ void CShowQLOptionDlg::OnBnClickedButtonAbout()
 
 void CShowQLOptionDlg::OnBnClickedButtonPintotaskbar()
 {
+	ShowWindow(SW_HIDE);
+	CKernelHandle handle;
 	OpenCommon(m_hWnd,
 		theApp.GetShowQLExe().c_str(),
-		L"--pin-me");
+		L"--pin-me",
+		NULL,
+		&handle);
+	WaitForSingleObject(handle, INFINITE);
+	ShowWindow(SW_SHOW);
 }

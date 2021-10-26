@@ -346,7 +346,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (bTopPopup)
 			{
 				AppendMenu(hMenu, 0, MF_SEPARATOR, 0);
-				InsertMenu(hMenu, GetMenuItemCount(hMenu), MF_BYPOSITION | MF_BYCOMMAND, MENUID_OPTIONS, I18N(L"Options"));
+				InsertMenu(hMenu, GetMenuItemCount(hMenu), MF_BYPOSITION | MF_BYCOMMAND, MENUID_OPTIONS, I18N(L"&Options..."));
 			}
 		}
 		break;
@@ -380,7 +380,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	gsw = make_unique<wstop_watch>();
 #endif
 
-	i18nInitLangmap(hInstance, NULL, NULL);
+	i18nInitLangmap(hInstance, NULL, APPNAME);
 
 	CKernelHandle singleMutex(CreateMutex(NULL, TRUE, L"ShowQLSingleInstance"));
 	if (!singleMutex)
@@ -403,7 +403,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	bool bVersion = false;
 	parser.AddOptionRange({ L"-v",L"-version",L"--version" }, 0, &bVersion, ArgEncodingFlags::ArgEncodingFlags_Default,
-		I18N(L"Shows version (Press CTRL in startup)"));
+		I18N(L"Shows version"));
 
 	bool bHelp = false;
 	parser.AddOptionRange({ L"-h",L"/?",L"-help",L"--help" }, 0, &bHelp, ArgEncodingFlags::ArgEncodingFlags_Default,
@@ -425,7 +425,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 	COption mainArgs(L"",ArgCount::ArgCount_One, ArgEncodingFlags::ArgEncodingFlags_Default,
-		L"Directory to show in menu");
+		I18N(L"Directory to show in menu"));
 	parser.AddOption(&mainArgs);
 
 	parser.Parse();
@@ -435,7 +435,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		ErrorExit(stdFormat(I18N(L"Unknown option:%s"), 
 			parser.getUnknowOptionStrings().c_str()));
 	}
-	if (bVersion || GetAsyncKeyState(VK_CONTROL) < 0)
+	if (bVersion)
 	{
 		wstring message = stdFormat(L"%s v%s",
 			APPNAME, GetVersionString(nullptr, 3).c_str()).c_str();
