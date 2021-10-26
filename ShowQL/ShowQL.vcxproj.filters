@@ -19,6 +19,9 @@
     <Filter Include="01 Source Files\lsMisc">
       <UniqueIdentifier>{92f494b7-fb3f-411c-b4b1-6d028a793877}</UniqueIdentifier>
     </Filter>
+    <Filter Include="05 lang">
+      <UniqueIdentifier>{e029d207-595a-4015-98cb-83cf838a0df0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ShowQL.cpp">
@@ -71,6 +74,9 @@
     </ClCompile>
     <ClCompile Include="..\common\common.cpp">
       <Filter>01 Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lsMisc\I18N.cpp">
+      <Filter>01 Source Files\lsMisc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +143,9 @@
     <ClInclude Include="..\common\common.h">
       <Filter>01 Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\lsMisc\I18N.h">
+      <Filter>01 Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ShowQL.rc">
@@ -154,6 +163,9 @@
   <ItemGroup>
     <Text Include="history.txt">
       <Filter>04 dists</Filter>
+    </Text>
+    <Text Include="lang\jpn.txt">
+      <Filter>05 lang</Filter>
     </Text>
   </ItemGroup>
 </Project>

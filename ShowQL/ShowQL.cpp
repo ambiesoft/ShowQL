@@ -18,6 +18,7 @@
 #include "../../lsMisc/Is64.h"
 #include "../../lsMisc/CreateShortcutFile.h"
 #include "../../lsMisc/stdosd/stdosd.h"
+#include "../../lsMisc/I18N.h"
 #include "../../profile/cpp/Profile/include/ambiesoft.profile.h"
 
 #include "../common/common.h"
@@ -32,7 +33,6 @@ using namespace Ambiesoft::stdosd;
 using namespace std;
 
 #define APPNAME L"ShowQL"
-#define I18N(s) s
 #define WAIT_AFTER_LAUNCH (5 * 1000)
 #define WAIT_FOR_PROCESSIDLE (30 * 1000)
 
@@ -379,6 +379,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 #ifndef NDEBUG
 	gsw = make_unique<wstop_watch>();
 #endif
+
+	i18nInitLangmap(hInstance, NULL, NULL);
 
 	CKernelHandle singleMutex(CreateMutex(NULL, TRUE, L"ShowQLSingleInstance"));
 	if (!singleMutex)
