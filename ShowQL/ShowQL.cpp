@@ -528,13 +528,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	GetCursorPos(&curPos);
 	SetForegroundWindow(wnd);
 	TRACE_STOPWATCH(L"Before TrackPopup");
-	UINT cmd = TrackPopupMenu(ghPopup,
+	const UINT cmd = TrackPopupMenu(ghPopup,
 		TPM_RETURNCMD,
 		curPos.x, curPos.y,
 		0,
 		wnd,
 		NULL);
 	TRACE_STOPWATCH(L"After TrackPopup");
+	DVERIFY(singleMutex.Close());
 	if(false)
 	{ }
 	else if (cmd == MENUID_OPTIONS)
