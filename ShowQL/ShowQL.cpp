@@ -1,9 +1,11 @@
-#include <Windows.h>
+﻿#include <Windows.h>
 #include <shlobj_core.h>
 
 #include <string>
 #include <map>
 #include <memory>
+#include <deque>
+#include <list>
 
 #include "../../lsMisc/CreateSimpleWindow.h"
 #include "../../lsMisc/GetLastErrorString.h"
@@ -393,10 +395,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	InitHighDPISupport();
 	
+	list<string> recents;
 	{
 		Profile::CHashIni ini(Profile::ReadAll(GetIniPath()));
 		Profile::GetBool(SECTION_OPTION, KEY_SHOW_HIDDEN, false, gbShowHidden, ini);
 		Profile::GetBool(SECTION_OPTION, KEY_NO_ICON, false, gbNoIcon, ini);
+
+		Profile::GetStringArray(SECTION_RECENTS, KEY_RECENT_ITEMS, recents, ini);
 	}
 
 	CCommandLineParser parser(I18N(L"Show QuickLaunch Menus"), APPNAME);
