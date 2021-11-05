@@ -8,3 +8,5 @@
 "Shows version"="バージョンを表示"
 "Directory to show in menu"="メニューで表示するディレクトリ"
 "Please pin this in the taskbar."="このアプリをタスクバーにピンしてください。"
+"&Clear Recent Items"="最近使ったアイテムをクリア(&C)"
+"Recent Items"="最近使ったアイテム"

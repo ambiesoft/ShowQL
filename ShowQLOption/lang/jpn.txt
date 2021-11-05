@@ -6,3 +6,6 @@
 "Show no &icons"="アイコンを表示しない(&I)"
 "About %s"="%sについて"
 "About ShowQL"="ShowQLについて"
+"&Count of recent items:"="最近使ったアイテムの表示個数(&C)"
+"Recent Items"="最近使ったアイテム"
+"Show no &recent items"="最近使ったアイテムを表示しない(&R)"
