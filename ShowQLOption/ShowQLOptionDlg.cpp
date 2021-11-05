@@ -25,19 +25,35 @@ CShowQLOptionDlg::CShowQLOptionDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_SHOWQLOPTION_DIALOG, pParent)
 	, m_bShowHidden(FALSE)
 	, m_bNoIcons(FALSE)
+	, m_bShowNoRecentItems(FALSE)
+	, m_nSpinPos(DEFAULT_RECENT_ITEMCOUNT)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
 	Profile::CHashIni ini(Profile::ReadAll(GetIniPath()));
 	Profile::GetInt(SECTION_OPTION, KEY_SHOW_HIDDEN, FALSE, m_bShowHidden, ini);
 	Profile::GetInt(SECTION_OPTION, KEY_NO_ICON, FALSE, m_bNoIcons, ini);
+	Profile::GetInt(SECTION_OPTION, KEY_NO_RECENTITEMS, FALSE, m_bShowNoRecentItems, ini);
+	Profile::GetInt(SECTION_OPTION, KEY_RECENTITEMCOUNT, DEFAULT_RECENT_ITEMCOUNT, m_nSpinPos, ini);
 }
 
+void AFXAPI DDX_Spin(CDataExchange* pDX, CSpinButtonCtrl& ctrl, int& value)
+{
+	if (pDX->m_bSaveAndValidate)
+		value = (int)ctrl.GetPos();
+	else
+		ctrl.SetPos(value);
+}
 void CShowQLOptionDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Check(pDX, IDC_CHECK_SHOWHIDDEN, m_bShowHidden);
 	DDX_Check(pDX, IDC_CHECK_NOICON, m_bNoIcons);
+	DDX_Check(pDX, IDC_CHECK_SHOWNORECENTITEMS, m_bShowNoRecentItems);
+	DDX_Control(pDX, IDC_SPIN_RECENTITEMS, m_spinRecentItems);
+	DDX_Control(pDX, IDC_EDIT_COUNTOFRECENTITEMS, m_editRecentItems);
+
+	DDX_Spin(pDX, m_spinRecentItems, m_nSpinPos);
 }
 
 BEGIN_MESSAGE_MAP(CShowQLOptionDlg, CDialogEx)
@@ -48,6 +64,7 @@ BEGIN_MESSAGE_MAP(CShowQLOptionDlg, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CShowQLOptionDlg::OnBnClickedOk)
 	ON_BN_CLICKED(IDC_BUTTON_ABOUT, &CShowQLOptionDlg::OnBnClickedButtonAbout)
 	ON_BN_CLICKED(IDC_BUTTON_PINTOTASKBAR, &CShowQLOptionDlg::OnBnClickedButtonPintotaskbar)
+	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_RECENTITEMS, &CShowQLOptionDlg::OnDeltaposSpinRecentitems)
 END_MESSAGE_MAP()
 
 
@@ -85,6 +102,9 @@ BOOL CShowQLOptionDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	SetWindowText(L"Option - ShowQL");
+	m_spinRecentItems.SetRange(1, 1000);
+	m_spinRecentItems.SetBuddy(&m_editRecentItems);
+	m_spinRecentItems.SetPos(m_nSpinPos);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -155,6 +175,8 @@ void CShowQLOptionDlg::OnBnClickedOk()
 	bool ok = true;
 	ok &= Profile::WriteInt(SECTION_OPTION, KEY_SHOW_HIDDEN, m_bShowHidden, ini);
 	ok &= Profile::WriteInt(SECTION_OPTION, KEY_NO_ICON, m_bNoIcons, ini);
+	ok &= Profile::WriteInt(SECTION_OPTION, KEY_NO_RECENTITEMS, m_bShowNoRecentItems, ini);
+	ok &= Profile::WriteInt(SECTION_OPTION, KEY_RECENTITEMCOUNT, m_nSpinPos, ini);
 	ok &= Profile::WriteAll(ini, GetIniPath());
 	if (!ok)
 	{
@@ -181,4 +203,12 @@ void CShowQLOptionDlg::OnBnClickedButtonPintotaskbar()
 		&handle);
 	WaitForSingleObject(handle, INFINITE);
 	ShowWindow(SW_SHOW);
+}
+
+
+void CShowQLOptionDlg::OnDeltaposSpinRecentitems(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
 }

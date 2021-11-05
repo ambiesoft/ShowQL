@@ -45,9 +45,13 @@ CHFont gMenuFont;
 enum {
 	MENUID_DUMMY = 1,
 	MENUID_NOITEM,
+	MENUID_NORECENTITEM,
 	MENUID_OPTIONS,
+	MENUID_CLEAR_RECENT_ITEMS,
 	MENUID_START,
-	MENUID_END = 65535,
+	MENUID_END = 65535 / 2,
+	MENUID_RECENT_START,
+	MENUID_RECENT_END,
 };
 HINSTANCE ghInst;
 WORD gMenuIndex;
@@ -60,7 +64,8 @@ int gIconWidth, gIconHeight;
 UINT gItemHeight;
 UINT gItemDeltaY;
 UINT gItemDeltaX;
-
+bool gbNoRecentItems = false;
+list<string> gRecents_;
 
 
 #ifndef NDEBUG
@@ -284,6 +289,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				;
 
 			const wstring sel = gPopupMap[hMenu];
+			if (sel == stdGetModuleFileName())
+			{
+				DASSERT(!gbNoRecentItems);
+				// recent
+				for (auto&& recentItem : gRecents_)
+				{
+					UINT cmd = gMenuIndex++ + MENUID_START;
+					AppendMenu(hMenu,
+						MF_BYCOMMAND,
+						cmd,
+						stdGetFileNameWitoutExtension(toStdWstringFromUtf8(recentItem)).c_str());
+					if (!gbNoIcon)
+					{
+						makeOwnerDraw(hMenu, cmd);
+					}
+					gCmdMap[cmd] = toStdWstringFromUtf8(recentItem);
+				}
+				if (gRecents_.empty())
+				{
+					InsertMenu(hMenu, 0, MF_BYCOMMAND | MF_DISABLED, MENUID_NORECENTITEM, L"<No Recent Items>");
+				}
+				else 
+				{
+					InsertMenu(hMenu, GetMenuItemCount(hMenu), MF_BYPOSITION | MF_SEPARATOR, 0, 0);
+					InsertMenu(hMenu, GetMenuItemCount(hMenu), MF_BYPOSITION | MF_BYCOMMAND, MENUID_CLEAR_RECENT_ITEMS, I18N(L"&Clear Recent Items"));
+				}
+				break;
+			}
 			const bool bTopPopup = sel.empty();
 			DTRACE_INITPOPUP(L"sel=" + sel);
 			wstring qlDir = bTopPopup ? qlRoot : sel;
@@ -349,6 +382,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				AppendMenu(hMenu, 0, MF_SEPARATOR, 0);
 				InsertMenu(hMenu, GetMenuItemCount(hMenu), MF_BYPOSITION | MF_BYCOMMAND, MENUID_OPTIONS, I18N(L"&Options..."));
+
+				if (!gbNoRecentItems)
+				{
+					// Insert recent at top
+					HMENU hPopupRecent = CreatePopupMenu();
+					InsertMenu(hMenu, 0, MF_POPUP | MF_BYPOSITION, (UINT_PTR)hPopupRecent, I18N(L"Recent Items"));
+					InsertMenu(hMenu, 1, MF_SEPARATOR | MF_BYPOSITION, 0, 0);
+					UINT cmd = gMenuIndex++ + MENUID_START;
+					AppendMenu(hPopupRecent,
+						MF_BYCOMMAND,
+						cmd,
+						L"Dummy");
+					if (!gbNoIcon)
+					{
+						makeOwnerDraw(hMenu, (UINT)(UINT_PTR)hPopupRecent);
+					}
+					gPopupMap[hPopupRecent] = stdGetModuleFileName();
+				}
 			}
 		}
 		break;
@@ -395,13 +446,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	InitHighDPISupport();
 	
-	list<string> recents;
+	int nRecentItemCount = DEFAULT_RECENT_ITEMCOUNT;
+	Profile::CHashIni ini(Profile::ReadAll(GetIniPath()));
 	{
-		Profile::CHashIni ini(Profile::ReadAll(GetIniPath()));
 		Profile::GetBool(SECTION_OPTION, KEY_SHOW_HIDDEN, false, gbShowHidden, ini);
 		Profile::GetBool(SECTION_OPTION, KEY_NO_ICON, false, gbNoIcon, ini);
-
-		Profile::GetStringArray(SECTION_RECENTS, KEY_RECENT_ITEMS, recents, ini);
+		Profile::GetBool(SECTION_OPTION, KEY_NO_RECENTITEMS, false, gbNoRecentItems, ini);
+		Profile::GetInt(SECTION_OPTION, KEY_RECENTITEMCOUNT, DEFAULT_RECENT_ITEMCOUNT,
+			nRecentItemCount, ini);
 	}
 
 	CCommandLineParser parser(I18N(L"Show QuickLaunch Menus"), APPNAME);
@@ -471,6 +523,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		return 0;
 	}
 
+	if (!gbNoRecentItems)
+	{
+		Profile::GetStringArray(SECTION_RECENTS, KEY_RECENT_ITEMS, gRecents_, ini);
+		if (gRecents_.size() > nRecentItemCount)
+			gRecents_.resize(nRecentItemCount);
+	}
 	TRACE_STOPWATCH(L"Started");
 
 	wstring targetFolder;
@@ -550,9 +608,30 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			L"ShowQLOption.exe");
 		OpenAndWait(wnd, appOption.c_str());
 	}
+	else if (cmd == MENUID_CLEAR_RECENT_ITEMS)
+	{
+		if (!Profile::WriteStringArray(SECTION_RECENTS, KEY_RECENT_ITEMS, 
+			decltype(gRecents_)(),
+			GetIniPath()))
+		{
+			ErrorExit(I18N(L"Failed to save recent items"));
+		}
+	}
 	else if (gCmdMap.find(cmd) != gCmdMap.end())
 	{
 		OpenAndWait(wnd, gCmdMap[cmd].c_str());
+		if (!gbNoRecentItems)
+		{
+			gRecents_.remove(toStdUtf8String(gCmdMap[cmd]));
+			gRecents_.push_front(toStdUtf8String(gCmdMap[cmd]));
+
+			if(gRecents_.size() > nRecentItemCount)
+				gRecents_.resize(nRecentItemCount);
+			if (!Profile::WriteStringArray(SECTION_RECENTS, KEY_RECENT_ITEMS, gRecents_, GetIniPath()))
+			{
+				ErrorExit(I18N(L"Failed to save recent items"));
+			}
+		}
 	}
 	return 0;
 }

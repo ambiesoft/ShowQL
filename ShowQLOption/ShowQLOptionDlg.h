@@ -38,4 +38,9 @@ public:
 	BOOL m_bNoIcons;
 	afx_msg void OnBnClickedButtonAbout();
 	afx_msg void OnBnClickedButtonPintotaskbar();
+	BOOL m_bShowNoRecentItems;
+	afx_msg void OnDeltaposSpinRecentitems(NMHDR* pNMHDR, LRESULT* pResult);
+	CSpinButtonCtrl m_spinRecentItems;
+	CEdit m_editRecentItems;
+	int m_nSpinPos;
 };
