@@ -1,3 +1,6 @@
+2021/11/08 v1.0.18
+Save recents after opening
+
 2021/11/05 v1.0.17
 Added: Show 'Recent Items'
 

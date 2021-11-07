@@ -619,7 +619,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 	else if (gCmdMap.find(cmd) != gCmdMap.end())
 	{
-		OpenAndWait(wnd, gCmdMap[cmd].c_str());
+		CKernelHandle processHandle;
+		const BOOL bOpened =
+			OpenCommon(wnd, gCmdMap[cmd].c_str(), NULL, NULL, &processHandle);
 		if (!gbNoRecentItems)
 		{
 			gRecents_.remove(toStdUtf8String(gCmdMap[cmd]));
@@ -627,10 +629,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 			if(gRecents_.size() > nRecentItemCount)
 				gRecents_.resize(nRecentItemCount);
-			if (!Profile::WriteStringArray(SECTION_RECENTS, KEY_RECENT_ITEMS, gRecents_, GetIniPath()))
+			if (!Profile::WriteStringArray(SECTION_RECENTS, KEY_RECENT_ITEMS,
+				gRecents_, GetIniPath()))
 			{
 				ErrorExit(I18N(L"Failed to save recent items"));
 			}
+		}
+		if(bOpened)
+		{
+			WaitForInputIdle(processHandle, WAIT_FOR_PROCESSIDLE);
 		}
 	}
 	return 0;
