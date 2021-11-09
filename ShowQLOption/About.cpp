@@ -22,7 +22,7 @@ CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
 , m_strInfo(_T(""))
 {
 	m_strInfo = stdFormat(L"%s v%s",
-		(LPCWSTR)AfxGetAppName(),
+		L"ShowQL",
 		GetVersionString(theApp.GetShowQLExe().c_str(), 3).c_str()).c_str();
 }
 
