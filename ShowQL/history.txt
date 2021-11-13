@@ -1,3 +1,6 @@
+2021/11/14 v1.0.19
+Update icon
+
 2021/11/08 v1.0.18
 Save recents after opening
 
