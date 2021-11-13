@@ -1,1 +1,1 @@
-C:\LegacyPrograms\ImageMagick\convert.exe icon32.png icon.ico
+C:\LegacyPrograms\ImageMagick\convert.exe icon16.png icon32.png icon.ico
