@@ -6,12 +6,12 @@
     "targets": [
             {
             	"setoutdirforbuild": false,
-        	    "outdir" : "Release\\v142\\ShowQL\\x86\\",
+        	    "outdir" : "Release\\v143\\ShowQL\\x86\\",
                 "platform":"x86"
             },
             {
             	"setoutdirforbuild": false,
-        	    "outdir" : "Release\\v142\\ShowQL\\x64\\",
+        	    "outdir" : "Release\\v143\\ShowQL\\x64\\",
                 "platform":"x64"
             }
     ],

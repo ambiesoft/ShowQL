@@ -1,3 +1,6 @@
+2022/01/19 v1.1.1
+Migrated to VS2022
+
 2021/11/14 v1.0.20
 Reset icon
 
