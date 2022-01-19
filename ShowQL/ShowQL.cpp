@@ -1,5 +1,6 @@
 ﻿#include <Windows.h>
 #include <shlobj_core.h>
+#include <Shlwapi.h>
 
 #include <string>
 #include <map>
@@ -292,25 +293,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (sel == stdGetModuleFileName())
 			{
 				DASSERT(!gbNoRecentItems);
+				
 				// recent
+				bool bRecentAdded = false;
 				for (auto&& recentItem : gRecents_)
 				{
-					UINT cmd = gMenuIndex++ + MENUID_START;
-					AppendMenu(hMenu,
-						MF_BYCOMMAND,
-						cmd,
-						stdGetFileNameWitoutExtension(toStdWstringFromUtf8(recentItem)).c_str());
-					if (!gbNoIcon)
+					if (PathFileExists(toStdWstringFromUtf8(recentItem).c_str()))
 					{
-						makeOwnerDraw(hMenu, cmd);
+						UINT cmd = gMenuIndex++ + MENUID_START;
+						AppendMenu(hMenu,
+							MF_BYCOMMAND,
+							cmd,
+							stdGetFileNameWitoutExtension(toStdWstringFromUtf8(recentItem)).c_str());
+						if (!gbNoIcon)
+						{
+							makeOwnerDraw(hMenu, cmd);
+						}
+						gCmdMap[cmd] = toStdWstringFromUtf8(recentItem);
+						bRecentAdded = true;
 					}
-					gCmdMap[cmd] = toStdWstringFromUtf8(recentItem);
 				}
-				if (gRecents_.empty())
+				if (gRecents_.empty() || !bRecentAdded)
 				{
 					InsertMenu(hMenu, 0, MF_BYCOMMAND | MF_DISABLED, MENUID_NORECENTITEM, L"<No Recent Items>");
 				}
-				else 
+				if(!gRecents_.empty())
 				{
 					InsertMenu(hMenu, GetMenuItemCount(hMenu), MF_BYPOSITION | MF_SEPARATOR, 0, 0);
 					InsertMenu(hMenu, GetMenuItemCount(hMenu), MF_BYPOSITION | MF_BYCOMMAND, MENUID_CLEAR_RECENT_ITEMS, I18N(L"&Clear Recent Items"));
@@ -526,7 +533,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (!gbNoRecentItems)
 	{
 		Profile::GetStringArray(SECTION_RECENTS, KEY_RECENT_ITEMS, gRecents_, ini);
-		if (gRecents_.size() > nRecentItemCount)
+		DASSERT(nRecentItemCount >= 0);
+		if (gRecents_.size() > static_cast<size_t>(nRecentItemCount))
 			gRecents_.resize(nRecentItemCount);
 	}
 	TRACE_STOPWATCH(L"Started");
@@ -627,7 +635,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			gRecents_.remove(toStdUtf8String(gCmdMap[cmd]));
 			gRecents_.push_front(toStdUtf8String(gCmdMap[cmd]));
 
-			if(gRecents_.size() > nRecentItemCount)
+			DASSERT(nRecentItemCount >= 0);
+			if(gRecents_.size() > static_cast<size_t>(nRecentItemCount))
 				gRecents_.resize(nRecentItemCount);
 			if (!Profile::WriteStringArray(SECTION_RECENTS, KEY_RECENT_ITEMS,
 				gRecents_, GetIniPath()))
