@@ -5,7 +5,7 @@ Shows Quick Lanuch menu
 Run "**ShowQLOption.exe**" and click '**Pin ShowQL**', it will show a MessageBox that can be pinned onto the taskbar.
 
 ## Environment
-Visual Studio 2019 runtime library are required.
+Visual Studio 2022 runtime library are required.
 
 ## CommandLine
 ```
